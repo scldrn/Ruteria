@@ -7,11 +7,17 @@ export const puntoDeVentaSchema = z.object({
   nombre_comercial: z.string().min(1, 'El nombre es requerido').max(200),
   tipo: z.string().optional(),
   direccion: z.string().optional(),
-  zona_id: z.string().uuid('Selecciona una zona').optional().nullable(),
+  zona_id: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().uuid('Selecciona una zona').optional().nullable()
+  ),
   contacto_nombre: z.string().optional(),
   contacto_tel: z.string().optional(),
   condiciones_pago: z.string().optional(),
-  forma_pago_preferida: z.enum(FORMAS_PAGO).optional().nullable(),
+  forma_pago_preferida: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.enum(FORMAS_PAGO).optional().nullable()
+  ),
   activo: z.boolean().default(true),
 })
 
