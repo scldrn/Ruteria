@@ -186,6 +186,9 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 | Fecha | Sprint/Tarea | Acción | Detalle |
 |-------|-------------|--------|---------|
 | 2026-03-21 | Fase 0 | Completado | Setup completo: Next.js 14, 10 migraciones SQL, triggers, RLS, auth triggers, seed, clientes Supabase, middleware. |
+| 2026-03-21 | Sprint 1 | Completado | Auth, AppShell/AppSidebar, CRUD productos/categorías/PDV/usuarios. 13 tests Playwright. PR #1 abierto (→ main). |
+| 2026-03-21 | Sprint 1 | Bug fix | Route groups (admin)/(campo) no generan prefijo URL. Páginas movidas a subcarpetas admin/ y campo/ dentro del grupo. |
+| 2026-03-21 | Sprint 1 | Bug fix | Selects vacíos en PDV (zona_id, forma_pago_preferida) fallaban validación Zod. Añadido z.preprocess para convertir "" → undefined. |
 
 ---
 
@@ -197,3 +200,15 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 - Regenerar `database.types.ts` (F0-17) después de cada migración SQL.
 - Los triggers de inventario (F0-13) son bloqueantes para Sprint 4 (cierre de visita).
 - El modo offline (Sprint 6) puede desarrollarse en paralelo al Sprint 5 si hay capacidad.
+
+### Decisiones Sprint 1 (relevantes para sprints futuros)
+
+**Estructura de rutas:** Los route groups `(admin)` y `(campo)` son solo organizativos — NO añaden segmento URL. Las páginas viven en subcarpetas `admin/` y `campo/` dentro del grupo para generar `/admin/*` y `/campo/*`. Respetar este patrón en todos los sprints.
+
+**Roles:** `UserRol` y `ROLES` exportados desde `lib/validations/usuarios.ts`. El middleware lee `user.app_metadata.rol`. Para crear usuarios en Supabase local usar Docker: `docker exec -i supabase_db_erp-vitrinas psql -U postgres`.
+
+**Formularios:** Selects HTML con opción vacía (`value=""`) necesitan `z.preprocess((v) => v === '' ? undefined : v, ...)` antes del validador Zod. Aplicar en todos los schemas nuevos que tengan campos opcionales con select.
+
+**Tests e2e:** Playwright configurado. Selectores por `input[name="..."]` (no por label, los Field no tienen htmlFor). Admin user: `admin@erp.local` / `Admin1234!`.
+
+**Git:** `develop` no existía en el remote al inicio del Sprint 1 — el PR fue directo a `main`. Antes de Sprint 2 crear `develop` en el remote y trabajar con el flujo correcto: feature → develop → main.
