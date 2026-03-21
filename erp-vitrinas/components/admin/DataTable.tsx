@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -35,13 +35,10 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const [page, setPage] = useState(0)
 
-  // Resetear página cuando cambia la cantidad de datos (e.g. búsqueda/filtro)
-  useEffect(() => {
-    setPage(0)
-  }, [data.length])
-
   const totalPages = Math.ceil(data.length / pageSize)
-  const pageData = data.slice(page * pageSize, (page + 1) * pageSize)
+  // Resetear página cuando cambia la cantidad de datos (e.g. búsqueda/filtro)
+  const currentPage = page >= totalPages && totalPages > 0 ? totalPages - 1 : page
+  const pageData = data.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
 
   if (isLoading) {
     return (
@@ -111,12 +108,12 @@ export function DataTable<T>({
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50">
           <span className="text-xs text-slate-500">
-            {page * pageSize + 1}–{Math.min((page + 1) * pageSize, data.length)} de {data.length}
+            {currentPage * pageSize + 1}–{Math.min((currentPage + 1) * pageSize, data.length)} de {data.length}
           </span>
           <div className="flex gap-1">
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
+              disabled={currentPage === 0}
               aria-label="Página anterior"
               className="p-1 rounded hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -124,7 +121,7 @@ export function DataTable<T>({
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page === totalPages - 1}
+              disabled={currentPage === totalPages - 1}
               aria-label="Página siguiente"
               className="p-1 rounded hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
             >

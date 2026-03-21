@@ -39,22 +39,22 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 
 ### Sprint 1 — Autenticación + Productos + PDV
 **Objetivo:** Login funcional y catálogo de productos con CRUD.
-**Estado general:** `[ ]` pendiente
+**Estado general:** `[x]` completado
 **HUs:** HU-01, HU-02, HU-03, HU-04, HU-05, HU-06, HU-07, HU-08
 
 | # | Tarea | HU | Estado | Notas |
 |---|-------|----|--------|-------|
-| S1-01 | Página de login con email/contraseña (Supabase Auth) | HU-01 | `[ ]` | |
-| S1-02 | Redirección post-login según rol (admin → /dashboard, colaboradora → /ruta-del-dia) | HU-01 | `[ ]` | |
-| S1-03 | Middleware de protección de rutas + sesión persistente | HU-01 | `[ ]` | |
-| S1-04 | Página de logout | HU-03 | `[ ]` | |
-| S1-05 | CRUD de usuarios con asignación de roles (solo admin) | HU-02 | `[ ]` | |
-| S1-06 | Listado de productos con búsqueda en tiempo real y filtros | HU-07 | `[ ]` | |
-| S1-07 | Formulario de creación de producto (código único, nombre, categoría, costo, precio) | HU-04 | `[ ]` | |
-| S1-08 | Edición de producto (precio de venta al comercio) | HU-05 | `[ ]` | |
-| S1-09 | Activar/desactivar producto | HU-06 | `[ ]` | |
-| S1-10 | CRUD de categorías | HU-04 | `[ ]` | |
-| S1-11 | Listado y formulario de Puntos de Venta con datos de contacto y ubicación | HU-08 | `[ ]` | |
+| S1-01 | Página de login con email/contraseña (Supabase Auth) | HU-01 | `[x]` | |
+| S1-02 | Redirección post-login según rol (admin → /dashboard, colaboradora → /ruta-del-dia) | HU-01 | `[x]` | |
+| S1-03 | Middleware de protección de rutas + sesión persistente | HU-01 | `[x]` | |
+| S1-04 | Página de logout | HU-03 | `[x]` | |
+| S1-05 | CRUD de usuarios con asignación de roles (solo admin) | HU-02 | `[x]` | |
+| S1-06 | Listado de productos con búsqueda en tiempo real y filtros | HU-07 | `[x]` | |
+| S1-07 | Formulario de creación de producto (código único, nombre, categoría, costo, precio) | HU-04 | `[x]` | |
+| S1-08 | Edición de producto (precio de venta al comercio) | HU-05 | `[x]` | |
+| S1-09 | Activar/desactivar producto | HU-06 | `[x]` | |
+| S1-10 | CRUD de categorías | HU-04 | `[x]` | |
+| S1-11 | Listado y formulario de Puntos de Venta con datos de contacto y ubicación | HU-08 | `[x]` | |
 
 ---
 
@@ -186,6 +186,7 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 | Fecha | Sprint/Tarea | Acción | Detalle |
 |-------|-------------|--------|---------|
 | 2026-03-21 | Fase 0 | Completado | Setup completo: Next.js 14, 10 migraciones SQL, triggers, RLS, auth triggers, seed, clientes Supabase, middleware. |
+| 2026-03-21 | Sprint 1 | Completado | Auth, shell admin, CRUD productos/categorías/PDV/usuarios. React Query all-client. |
 
 ---
 
