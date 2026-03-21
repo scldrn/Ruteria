@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const ROLES = ['admin', 'colaboradora', 'supervisor', 'analista', 'compras'] as const
+export const ROLES = ['admin', 'colaboradora', 'supervisor', 'analista', 'compras'] as const
 
 export type UserRol = (typeof ROLES)[number]
 
