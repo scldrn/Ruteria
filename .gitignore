@@ -19,6 +19,9 @@ erp-vitrinas/build/
 erp-vitrinas/supabase/.branches
 erp-vitrinas/supabase/.temp
 
+# Git worktrees
+.worktrees/
+
 # Visual companion
 .superpowers/
 
