@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+erp-vitrinas/.next/
+erp-vitrinas/out/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Build
+erp-vitrinas/build/
+
+# Supabase
+erp-vitrinas/supabase/.branches
+erp-vitrinas/supabase/.temp
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
