@@ -122,6 +122,10 @@ export function PuntoDeVentaSheet({ open, onClose, pdv }: PuntoDeVentaSheetProps
             </Field>
           </div>
 
+          <Field label="Condiciones de pago" error={errors.condiciones_pago?.message}>
+            <input {...register('condiciones_pago')} className={inputCls} placeholder="Ej: pago a 30 días" />
+          </Field>
+
           <Field label="Forma de pago preferida" error={errors.forma_pago_preferida?.message}>
             <select {...register('forma_pago_preferida')} className={inputCls}>
               <option value="">Sin preferencia</option>
