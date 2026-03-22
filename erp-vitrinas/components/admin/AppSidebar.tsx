@@ -9,6 +9,9 @@ import {
   Store,
   Users,
   LogOut,
+  Monitor,
+  Warehouse,
+  Map,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { logoutAction } from '@/app/actions/auth'
@@ -25,6 +28,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/productos', icon: Package, label: 'Productos' },
   { href: '/admin/puntos-de-venta', icon: Store, label: 'Puntos de Venta' },
+  { href: '/admin/vitrinas', icon: Monitor, label: 'Vitrinas' },
+  { href: '/admin/inventario', icon: Warehouse, label: 'Inventario' },
+  { href: '/admin/rutas', icon: Map, label: 'Rutas' },
   { href: '/admin/usuarios', icon: Users, label: 'Usuarios', adminOnly: true },
 ]
 

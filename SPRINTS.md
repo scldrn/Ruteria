@@ -60,18 +60,28 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 
 ### Sprint 2 — Vitrinas + Inventario Central + Rutas
 **Objetivo:** Gestión completa de vitrinas y configuración de rutas.
-**Estado general:** `[ ]` pendiente
+**Estado general:** `[x]` completado
 **HUs:** HU-09, HU-10, HU-11, HU-12, HU-13, HU-25
 
 | # | Tarea | HU | Estado | Notas |
 |---|-------|----|--------|-------|
-| S2-01 | Crear vitrina y asignarla a un PDV | HU-09 | `[ ]` | |
-| S2-02 | Definir surtido estándar por vitrina (producto + cantidad objetivo) | HU-10 | `[ ]` | |
-| S2-03 | Vista de inventario actual de vitrina (stock vs surtido estándar) | HU-11 | `[ ]` | |
-| S2-04 | Marcar vitrina como retirada | HU-12 | `[ ]` | |
-| S2-05 | Entrada de productos al inventario central por compra | HU-25 | `[ ]` | |
-| S2-06 | Crear ruta con lista de PDV ordenada y asignar a colaboradora | HU-13 | `[ ]` | |
-| S2-07 | Vista de rutas: listado con estado y colaboradora asignada | HU-13 | `[ ]` | |
+| S2-01 | Crear vitrina y asignarla a un PDV | HU-09 | `[x]` | |
+| S2-02 | Definir surtido estándar por vitrina (producto + cantidad objetivo) | HU-10 | `[x]` | |
+| S2-03 | Vista de inventario actual de vitrina (stock vs surtido estándar) | HU-11 | `[x]` | |
+| S2-04 | Marcar vitrina como retirada | HU-12 | `[x]` | |
+| S2-05 | Entrada de productos al inventario central por compra | HU-25 | `[x]` | |
+| S2-06 | Crear ruta con lista de PDV ordenada y asignar a colaboradora | HU-13 | `[x]` | |
+| S2-07 | Vista de rutas: listado con estado y colaboradora asignada | HU-13 | `[x]` | |
+
+### Sprint 2 — Log (2026-03-22)
+
+Completado: Módulos Vitrinas (listado + detalle con tabs), Inventario Central y Rutas (con drag-and-drop de PDVs).
+
+Decisiones técnicas:
+- `params` en Next.js 16 desempaquetado con `use(params)` en client components
+- Rollback compensatorio para mutaciones de 2 pasos en `useRutas` (create + insert PDVs; update con delete+reinsert)
+- `useQueryClient()` siempre antes de `useQuery()` — regla confirmada en Sprint 2
+- `z.input<typeof schema>` para tipos de formulario con `.default()` — patrón consolidado
 
 ---
 
@@ -187,6 +197,7 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 |-------|-------------|--------|---------|
 | 2026-03-21 | Fase 0 | Completado | Setup completo: Next.js 14, 10 migraciones SQL, triggers, RLS, auth triggers, seed, clientes Supabase, middleware. |
 | 2026-03-21 | Sprint 1 | Completado | Auth, shell admin, CRUD productos/categorías/PDV/usuarios. React Query all-client. |
+| 2026-03-22 | Sprint 2 | Completado | Módulos Vitrinas (listado + detalle tabs), Inventario Central y Rutas con DnD. Dependencias: @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities. |
 
 ---
 
