@@ -77,17 +77,17 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 
 ### Sprint 3 — Planificación de Rutas + Inicio de Visita
 **Objetivo:** Colaboradora puede ver su ruta y comenzar una visita con cálculo automático.
-**Estado general:** `[ ]` pendiente
+**Estado general:** `[x]` completado (2026-03-22)
 **HUs:** HU-14, HU-15, HU-16, HU-17, HU-18, HU-19
 
 | # | Tarea | HU | Estado | Notas |
 |---|-------|----|--------|-------|
-| S3-01 | Vista móvil: ruta del día con PDV en orden y estado (pendiente/completado) | HU-14 | `[ ]` | |
-| S3-02 | Dashboard admin: visitas planificadas vs realizadas por ruta | HU-15 | `[ ]` | |
-| S3-03 | Reasignación temporal de ruta a otra colaboradora (con motivo y fecha) | HU-16 | `[ ]` | |
-| S3-04 | Iniciar visita: registrar hora de inicio, mostrar inv_anterior por producto | HU-17 | `[ ]` | |
-| S3-05 | Ingreso de inventario actual → cálculo automático de unidades_vendidas | HU-18 | `[ ]` | |
-| S3-06 | Mostrar monto total a cobrar desglosado por producto | HU-19 | `[ ]` | |
+| S3-01 | Vista móvil: ruta del día con PDV en orden y estado (pendiente/completado) | HU-14 | `[x]` | `/campo/ruta-del-dia` — hook `useRutaDelDia` |
+| S3-02 | Dashboard admin: visitas planificadas vs realizadas por ruta | HU-15 | `[x]` | `/admin/visitas` — hook `useVisitas` con filtro de fecha |
+| S3-03 | Reasignación temporal de ruta a otra colaboradora (con motivo y fecha) | HU-16 | `[x]` | `RutaSheet` — campo `nota_reasignacion` + migración 20260011 |
+| S3-04 | Iniciar visita: registrar hora de inicio, mostrar inv_anterior por producto | HU-17 | `[x]` | `/campo/visita/[id]` — `VisitaInicioView` |
+| S3-05 | Ingreso de inventario actual → cálculo automático de unidades_vendidas | HU-18 | `[x]` | `ConteoTable` — cálculo live en cliente |
+| S3-06 | Mostrar monto total a cobrar desglosado por producto | HU-19 | `[x]` | `VisitaConteoView` — subtotales por producto |
 
 ---
 
@@ -212,3 +212,24 @@ Archivo de seguimiento de sprints para el agente Claude Code.
 **Tests e2e:** Playwright configurado. Selectores por `input[name="..."]` (no por label, los Field no tienen htmlFor). Admin user: `admin@erp.local` / `Admin1234!`.
 
 **Git:** `develop` no existía en el remote al inicio del Sprint 1 — el PR fue directo a `main`. Antes de Sprint 2 crear `develop` en el remote y trabajar con el flujo correcto: feature → develop → main.
+
+### Log Sprint 3 (2026-03-22)
+
+| Fecha | Sprint/Tarea | Acción | Detalle |
+|-------|-------------|--------|---------|
+| 2026-03-22 | Sprint 2 | Completado | Módulos Vitrinas, Inventario Central y Rutas. PR mergeado a main antes de iniciar Sprint 3. |
+| 2026-03-22 | Sprint 3 | Completado | Flujo de visita campo completo + dashboard admin visitas. 7/7 tests Playwright. Rama `feature/sprint3-visitas-campo`. |
+
+### Decisiones Sprint 3 (relevantes para sprints futuros)
+
+**PostgREST FK path en `visitas`:** No existe FK directa de `visitas` a `rutas_pdv`. Para obtener `orden_visita`, unir a través de `rutas!inner(nombre, rutas_pdv(orden_visita, pdv_id))` y hacer match por `pdv_id` en cliente.
+
+**Edge Functions Deno + tsconfig:** Las Edge Functions usan globals de Deno no disponibles en Node. Añadir `"supabase/functions"` al array `exclude` de `tsconfig.json` para evitar errores de tipo en `tsc --noEmit`.
+
+**Cache React Query en mutations:** Si el sheet/dialog reabre inmediatamente tras guardar, `invalidateQueries` puede llegar tarde (refetch async). Solución: usar `setQueryData` para actualizar el cache sincrónicamente en `onSuccess` + `invalidateQueries` para consistencia background.
+
+**Prop drilling a sheets:** Al pasar datos de un row a un sheet de edición, revisar que TODOS los campos del schema del formulario estén incluidos en el objeto prop — especialmente campos opacionales nuevos. Omitir un campo hace que el sheet muestre el default en lugar del valor guardado.
+
+**`inv_anterior = 0`:** Primera visita a una vitrina nueva no tiene row en `inventario_vitrina`. Usar `inventarioMap.get(prod.id) ?? 0`.
+
+**Cron de generación de visitas:** `supabase/config.toml` en CLI local v2.75.0 no soporta `schedule` en `[functions.*]`. Configurar el cron desde el dashboard de Supabase Cloud en producción.
