@@ -1,0 +1,1 @@
+ALTER TABLE rutas ADD COLUMN IF NOT EXISTS nota_reasignacion TEXT;
