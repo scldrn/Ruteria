@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { use, useState } from 'react'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
@@ -55,7 +56,11 @@ function SkeletonPage() {
   )
 }
 
-export default function VitrinaDetallePage({ params }: { params: { id: string } }) {
+const VALID_ESTADOS = ['activa', 'inactiva', 'retirada'] as const
+type EstadoVitrina = typeof VALID_ESTADOS[number]
+
+export default function VitrinaDetallePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const { data: vitrinas = [], isLoading } = useVitrinas()
   const retirarVitrina = useRetirarVitrina()
@@ -63,7 +68,7 @@ export default function VitrinaDetallePage({ params }: { params: { id: string } 
 
   if (isLoading) return <SkeletonPage />
 
-  const vitrina = vitrinas.find((v) => v.id === params.id)
+  const vitrina = vitrinas.find((v) => v.id === id)
 
   if (!vitrina) {
     return (
@@ -78,7 +83,7 @@ export default function VitrinaDetallePage({ params }: { params: { id: string } 
 
   async function handleRetirar() {
     try {
-      await retirarVitrina.mutateAsync(params.id)
+      await retirarVitrina.mutateAsync(id)
       toast.success('Vitrina retirada')
       router.push('/admin/vitrinas')
     } catch (err) {
@@ -87,7 +92,9 @@ export default function VitrinaDetallePage({ params }: { params: { id: string } 
     }
   }
 
-  const estado = vitrina.estado as string
+  const estado: EstadoVitrina = VALID_ESTADOS.includes(vitrina.estado as EstadoVitrina)
+    ? (vitrina.estado as EstadoVitrina)
+    : 'inactiva'
   const pdvNombre = vitrina.puntos_de_venta?.nombre_comercial ?? '—'
 
   return (
@@ -181,6 +188,7 @@ export default function VitrinaDetallePage({ params }: { params: { id: string } 
                       <AlertDialogAction
                         className="bg-red-600 hover:bg-red-500 text-white"
                         onClick={handleRetirar}
+                        disabled={retirarVitrina.isPending}
                       >
                         {retirarVitrina.isPending ? 'Retirando...' : 'Sí, retirar'}
                       </AlertDialogAction>
@@ -194,12 +202,12 @@ export default function VitrinaDetallePage({ params }: { params: { id: string } 
 
         {/* Tab: Surtido estándar */}
         <TabsContent value="surtido">
-          <SurtidoEstandarTab vitrinaId={params.id} />
+          <SurtidoEstandarTab vitrinaId={id} />
         </TabsContent>
 
         {/* Tab: Inventario actual */}
         <TabsContent value="inventario">
-          <InventarioVitrinaTab vitrinaId={params.id} />
+          <InventarioVitrinaTab vitrinaId={id} />
         </TabsContent>
       </Tabs>
 
@@ -212,7 +220,7 @@ export default function VitrinaDetallePage({ params }: { params: { id: string } 
           codigo: vitrina.codigo,
           pdv_id: vitrina.pdv_id,
           tipo: vitrina.tipo,
-          estado: vitrina.estado as 'activa' | 'inactiva' | 'retirada',
+          estado: estado,
           notas: vitrina.notas,
         }}
       />
@@ -221,7 +229,7 @@ export default function VitrinaDetallePage({ params }: { params: { id: string } 
 }
 
 // Local helper
-function Field({ label, value }: { label: string; value: React.ReactNode }) {
+function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <dt className="text-xs font-medium text-slate-500 mb-0.5">{label}</dt>
