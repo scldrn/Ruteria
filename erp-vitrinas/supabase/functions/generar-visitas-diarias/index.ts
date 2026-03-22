@@ -2,6 +2,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
 
+type RutaPdvRow = {
+  pdv_id: string
+  orden_visita: number
+  puntos_de_venta: { id: string; activo: boolean } | null
+}
+
 Deno.serve(async (_req) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -38,27 +44,34 @@ Deno.serve(async (_req) => {
 
   let creadas = 0
   let omitidas = 0
+  let errores = 0
 
   for (const ruta of rutas ?? []) {
-    const pdvsActivos = (ruta.rutas_pdv ?? []).filter(
-      (rp: any) => rp.puntos_de_venta?.activo === true
+    const pdvsActivos = ((ruta.rutas_pdv ?? []) as RutaPdvRow[]).filter(
+      (rp) => rp.puntos_de_venta?.activo === true
     )
 
     for (const rp of pdvsActivos) {
       const pdvId = rp.pdv_id
 
       // 2. Vitrina activa asignada a este PDV
-      const { data: vitrina } = await supabase
+      const { data: vitrina, error: vitrinaError } = await supabase
         .from('vitrinas')
         .select('id')
         .eq('pdv_id', pdvId)
         .eq('estado', 'activa')
         .maybeSingle()
 
+      if (vitrinaError) {
+        console.error(`Error fetching vitrina for pdv ${pdvId}:`, vitrinaError.message)
+        errores++
+        continue
+      }
+
       if (!vitrina) continue // PDV sin vitrina activa — saltar
 
       // 3. Idempotencia: ya existe planificada para hoy con esta combinación?
-      const { data: existente } = await supabase
+      const { data: existente, error: existenteError } = await supabase
         .from('visitas')
         .select('id')
         .eq('pdv_id', pdvId)
@@ -68,6 +81,12 @@ Deno.serve(async (_req) => {
         .gte('created_at', `${fechaHoy}T00:00:00.000Z`)
         .lt('created_at', `${fechaHoy}T23:59:59.999Z`)
         .maybeSingle()
+
+      if (existenteError) {
+        console.error(`Error checking idempotency for pdv ${pdvId}:`, existenteError.message)
+        errores++
+        continue
+      }
 
       if (existente) {
         omitidas++
@@ -85,15 +104,17 @@ Deno.serve(async (_req) => {
 
       if (insertError) {
         console.error(`Error inserting visita for pdv ${pdvId}:`, insertError.message)
+        errores++
       } else {
         creadas++
       }
     }
   }
 
-  console.log(`Visitas generadas: ${creadas}, omitidas (ya existían): ${omitidas}`)
-  return new Response(JSON.stringify({ creadas, omitidas }), {
-    status: 200,
+  console.log(`Visitas generadas: ${creadas}, omitidas: ${omitidas}, errores: ${errores}`)
+  const status = errores > 0 ? 207 : 200
+  return new Response(JSON.stringify({ creadas, omitidas, errores }), {
+    status,
     headers: { 'Content-Type': 'application/json' },
   })
 })
