@@ -1,13 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { createClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
 import path from 'path'
 config({ path: path.resolve('/Users/sam/Proyects/PowerApp/erp-vitrinas', '.env.local') })
-
-const adminSb = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 test.use({ viewport: { width: 390, height: 844 } })
 

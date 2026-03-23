@@ -1,6 +1,45 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
+const BUSINESS_TIME_ZONE = 'America/Bogota'
+
+function getBusinessDateParts(date: Date) {
+  const formatter = new Intl.DateTimeFormat('es-CO', {
+    timeZone: BUSINESS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'long',
+  })
+
+  const parts = formatter.formatToParts(date)
+  const year = parts.find((part) => part.type === 'year')?.value
+  const month = parts.find((part) => part.type === 'month')?.value
+  const day = parts.find((part) => part.type === 'day')?.value
+  const weekday = parts.find((part) => part.type === 'weekday')?.value
+
+  if (!year || !month || !day || !weekday) {
+    throw new Error('No se pudo calcular la fecha de negocio')
+  }
+
+  return {
+    date: `${year}-${month}-${day}`,
+    weekday: weekday
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''),
+  }
+}
+
+function addDaysToDateString(date: string, days: number) {
+  const [year, month, day] = date.split('-').map(Number)
+  const utcDate = new Date(Date.UTC(year, month - 1, day + days))
+  const nextYear = utcDate.getUTCFullYear()
+  const nextMonth = String(utcDate.getUTCMonth() + 1).padStart(2, '0')
+  const nextDay = String(utcDate.getUTCDate()).padStart(2, '0')
+
+  return `${nextYear}-${nextMonth}-${nextDay}`
+}
 
 type RutaPdvRow = {
   pdv_id: string
@@ -23,9 +62,12 @@ Deno.serve(async (_req) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-  const hoy = new Date()
-  const diaActual = DIAS_SEMANA[hoy.getDay()] // 'lunes', 'martes', etc.
-  const fechaHoy = hoy.toISOString().split('T')[0] // 'YYYY-MM-DD'
+  const hoy = getBusinessDateParts(new Date())
+  const diaActual = DIAS_SEMANA.includes(hoy.weekday) ? hoy.weekday : DIAS_SEMANA[new Date().getUTCDay()]
+  const fechaHoy = hoy.date
+  const fechaManana = addDaysToDateString(fechaHoy, 1)
+  const start = `${fechaHoy}T05:00:00.000Z`
+  const end = `${fechaManana}T05:00:00.000Z`
 
   // 1. Rutas activas que tienen programado el día actual
   const { data: rutas, error: rutasError } = await supabase
@@ -78,8 +120,8 @@ Deno.serve(async (_req) => {
         .eq('vitrina_id', vitrina.id)
         .eq('colaboradora_id', ruta.colaboradora_id)
         .eq('estado', 'planificada')
-        .gte('created_at', `${fechaHoy}T00:00:00.000Z`)
-        .lt('created_at', `${fechaHoy}T23:59:59.999Z`)
+        .gte('created_at', start)
+        .lt('created_at', end)
         .maybeSingle()
 
       if (existenteError) {

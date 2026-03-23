@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Crea los usuarios de prueba en Supabase Auth local.
  * Ejecutar después de `supabase db reset`.

@@ -136,6 +136,18 @@ test('usuarios: accesible para admin', async ({ page }) => {
   await expect(page.getByRole('table').or(page.getByText(/no hay registros/i))).toBeVisible({ timeout: 8000 })
 })
 
+test('usuarios: colaboradora no puede entrar al módulo admin', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByLabel(/correo/i).fill('colaboradora@erp.local')
+  await page.getByLabel(/contraseña/i).fill('Colab1234!')
+  await page.getByRole('button', { name: /iniciar sesión/i }).click()
+  await page.waitForURL('**/campo/ruta-del-dia')
+
+  await page.goto('/admin/usuarios')
+  await page.waitForURL('**/campo/ruta-del-dia')
+  await expect(page).toHaveURL(/campo\/ruta-del-dia/)
+})
+
 // ── LOGOUT ─────────────────────────────────────────────────────────────────
 
 test('logout: cierra sesión y redirige a login', async ({ page }) => {

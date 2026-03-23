@@ -30,8 +30,14 @@ export default function CategoriasPage() {
       key: 'acciones',
       header: '',
       render: (c) => (
-        <Button variant="ghost" size="sm" onClick={() => { setEditing(c); setSheetOpen(true) }}>
-          <Pencil size={14} />
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Editar categoría ${c.nombre}`}
+          title={`Editar categoría ${c.nombre}`}
+          onClick={() => { setEditing(c); setSheetOpen(true) }}
+        >
+          <Pencil size={14} aria-hidden />
         </Button>
       ),
       className: 'w-12',

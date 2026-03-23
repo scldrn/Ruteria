@@ -114,8 +114,12 @@ export default function VitrinasPage() {
         render: (v) => (
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/admin/vitrinas/${v.id}`}>
-                <Eye size={14} aria-label="Ver detalle" />
+              <Link
+                href={`/admin/vitrinas/${v.id}`}
+                aria-label={`Ver detalle de vitrina ${v.codigo}`}
+                title={`Ver detalle de vitrina ${v.codigo}`}
+              >
+                <Eye size={14} aria-hidden />
               </Link>
             </Button>
             {/* Vitrinas retiradas no se pueden editar */}
@@ -123,9 +127,11 @@ export default function VitrinasPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label={`Editar vitrina ${v.codigo}`}
+                title={`Editar vitrina ${v.codigo}`}
                 onClick={() => handleEditar(v)}
               >
-                <Pencil size={14} aria-label="Editar" />
+                <Pencil size={14} aria-hidden />
               </Button>
             )}
             {/* Retirar solo si no está ya retirada */}
@@ -133,10 +139,12 @@ export default function VitrinasPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label={`Retirar vitrina ${v.codigo}`}
+                title={`Retirar vitrina ${v.codigo}`}
                 className="text-red-500 hover:text-red-600 hover:bg-red-50"
                 onClick={() => setRetiroTarget(v)}
               >
-                <ArchiveX size={14} aria-label="Retirar" />
+                <ArchiveX size={14} aria-hidden />
               </Button>
             )}
           </div>

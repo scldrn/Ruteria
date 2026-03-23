@@ -55,8 +55,14 @@ export default function PuntosDeVentaPage() {
       key: 'acciones',
       header: '',
       render: (p) => (
-        <Button variant="ghost" size="sm" onClick={() => { setEditing(p); setSheetOpen(true) }}>
-          <Pencil size={14} />
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Editar punto de venta ${p.nombre_comercial}`}
+          title={`Editar punto de venta ${p.nombre_comercial}`}
+          onClick={() => { setEditing(p); setSheetOpen(true) }}
+        >
+          <Pencil size={14} aria-hidden />
         </Button>
       ),
       className: 'w-12',

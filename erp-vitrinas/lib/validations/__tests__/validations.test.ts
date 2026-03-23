@@ -3,6 +3,8 @@ import { productoSchema } from '../productos'
 import { categoriaSchema } from '../categorias'
 import { puntoDeVentaSchema } from '../puntos-de-venta'
 import { usuarioCreateSchema } from '../usuarios'
+import { entradaInventarioSchema } from '../inventario'
+import { rutaSchema } from '../rutas'
 
 const UUID = '00000000-0000-0000-0000-000000000001'
 
@@ -91,6 +93,38 @@ describe('usuarioCreateSchema', () => {
       email: 'no-es-email',
       password: 'secreto123',
       rol: 'colaboradora',
+    }).success).toBe(false)
+  })
+})
+
+describe('entradaInventarioSchema', () => {
+  it('convierte costo_unitario vacio a undefined', () => {
+    const result = entradaInventarioSchema.parse({
+      producto_id: UUID,
+      cantidad: '3',
+      costo_unitario: '',
+    })
+
+    expect(result.costo_unitario).toBeUndefined()
+  })
+})
+
+describe('rutaSchema', () => {
+  it('acepta dias_visita completos compatibles con el scheduler', () => {
+    expect(rutaSchema.safeParse({
+      codigo: 'RUT-001',
+      nombre: 'Ruta Norte',
+      colaboradora_id: UUID,
+      dias_visita: ['lunes', 'miercoles'],
+    }).success).toBe(true)
+  })
+
+  it('rechaza abreviaturas invalidas en dias_visita', () => {
+    expect(rutaSchema.safeParse({
+      codigo: 'RUT-001',
+      nombre: 'Ruta Norte',
+      colaboradora_id: UUID,
+      dias_visita: ['lun'],
     }).success).toBe(false)
   })
 })

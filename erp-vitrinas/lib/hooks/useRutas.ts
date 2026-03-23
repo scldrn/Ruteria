@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/database.types'
 import type { RutaFormValues, RutaPdvValues } from '@/lib/validations/rutas'
+import { normalizeDiasVisita } from '@/lib/rutas'
 
 type RutaRow = Database['public']['Tables']['rutas']['Row']
 
@@ -26,6 +27,7 @@ export function useRutas() {
       if (error) throw new Error(error.message)
       return (data ?? []).map((r) => ({
         ...r,
+        dias_visita: normalizeDiasVisita(r.dias_visita),
         num_pdvs: Array.isArray(r.rutas_pdv) ? r.rutas_pdv.length : 0,
       })) as Ruta[]
     },
@@ -37,6 +39,7 @@ export function useCreateRuta() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ datos, pdvs }: { datos: RutaFormValues; pdvs: RutaPdvValues[] }) => {
+      const diasVisita = normalizeDiasVisita(datos.dias_visita)
       const { data, error } = await supabase
         .from('rutas')
         .insert({
@@ -45,7 +48,7 @@ export function useCreateRuta() {
           colaboradora_id: datos.colaboradora_id,
           zona_id: datos.zona_id ?? null,
           frecuencia: datos.frecuencia,
-          dias_visita: datos.dias_visita,
+          dias_visita: diasVisita,
           estado: datos.estado,
         })
         .select('id')
@@ -85,6 +88,9 @@ export function useUpdateRuta() {
       datos: Partial<RutaFormValues>
       pdvs?: RutaPdvValues[]
     }) => {
+      const diasVisita =
+        datos.dias_visita !== undefined ? normalizeDiasVisita(datos.dias_visita) : undefined
+
       const { error } = await supabase
         .from('rutas')
         .update({
@@ -93,7 +99,7 @@ export function useUpdateRuta() {
           ...(datos.colaboradora_id !== undefined && { colaboradora_id: datos.colaboradora_id }),
           ...(datos.zona_id !== undefined && { zona_id: datos.zona_id ?? null }),
           ...(datos.frecuencia !== undefined && { frecuencia: datos.frecuencia }),
-          ...(datos.dias_visita !== undefined && { dias_visita: datos.dias_visita }),
+          ...(diasVisita !== undefined && { dias_visita: diasVisita }),
           ...(datos.estado !== undefined && { estado: datos.estado }),
           ...(datos.nota_reasignacion !== undefined && { nota_reasignacion: datos.nota_reasignacion }),
         })

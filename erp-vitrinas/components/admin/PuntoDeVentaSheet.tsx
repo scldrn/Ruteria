@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { puntoDeVentaSchema } from '@/lib/validations/puntos-de-venta'
@@ -87,6 +87,9 @@ export function PuntoDeVentaSheet({ open, onClose, pdv }: PuntoDeVentaSheetProps
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{pdv ? 'Editar punto de venta' : 'Nuevo punto de venta'}</SheetTitle>
+          <SheetDescription>
+            Registra la información operativa y de contacto del punto de venta.
+          </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
           <div className="grid grid-cols-2 gap-3">

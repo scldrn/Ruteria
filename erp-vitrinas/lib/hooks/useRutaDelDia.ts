@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { getBusinessDayUtcRange } from '@/lib/dates'
 
 export type VisitaDelDia = {
   id: string
@@ -74,31 +75,46 @@ export function useRutaDelDia() {
   return useQuery({
     queryKey: ['ruta-del-dia'],
     queryFn: async (): Promise<VisitaDelDia[]> => {
-      const hoy = new Date().toISOString().split('T')[0]
+      const { start, end } = getBusinessDayUtcRange()
 
-      const [planificadas, activas] = await Promise.all([
+      const [planificadas, activas, noRealizadas] = await Promise.all([
         supabase
           .from('visitas')
           .select(SELECT)
           .eq('estado', 'planificada')
-          .gte('created_at', `${hoy}T00:00:00.000Z`)
-          .lte('created_at', `${hoy}T23:59:59.999Z`),
+          .gte('created_at', start)
+          .lt('created_at', end),
         supabase
           .from('visitas')
           .select(SELECT)
-          .in('estado', ['en_ejecucion', 'completada', 'no_realizada'])
+          .in('estado', ['en_ejecucion', 'completada'])
           .not('fecha_hora_inicio', 'is', null)
-          .gte('fecha_hora_inicio', `${hoy}T00:00:00.000Z`)
-          .lte('fecha_hora_inicio', `${hoy}T23:59:59.999Z`),
+          .gte('fecha_hora_inicio', start)
+          .lt('fecha_hora_inicio', end),
+        supabase
+          .from('visitas')
+          .select(SELECT)
+          .eq('estado', 'no_realizada')
+          .gte('created_at', start)
+          .lt('created_at', end),
       ])
 
       if (planificadas.error) throw new Error(planificadas.error.message)
       if (activas.error) throw new Error(activas.error.message)
+      if (noRealizadas.error) throw new Error(noRealizadas.error.message)
 
-      return [
-        ...(planificadas.data ?? []).map((v) => mapRow(v as unknown as RawVisita)),
-        ...(activas.data ?? []).map((v) => mapRow(v as unknown as RawVisita)),
-      ].sort((a, b) => a.orden_visita - b.orden_visita)
+      const deduped = new Map<string, VisitaDelDia>()
+
+      for (const visita of [
+        ...(planificadas.data ?? []),
+        ...(activas.data ?? []),
+        ...(noRealizadas.data ?? []),
+      ]) {
+        const mapped = mapRow(visita as unknown as RawVisita)
+        deduped.set(mapped.id, mapped)
+      }
+
+      return Array.from(deduped.values()).sort((a, b) => a.orden_visita - b.orden_visita)
     },
   })
 }

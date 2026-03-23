@@ -19,6 +19,7 @@ import { DataTable, type Column } from '@/components/admin/DataTable'
 import { SearchInput } from '@/components/admin/SearchInput'
 import { RutaSheet } from '@/components/admin/RutaSheet'
 import { useRutas, useDesactivarRuta } from '@/lib/hooks/useRutas'
+import { formatDiaVisita, normalizeDiasVisita } from '@/lib/rutas'
 
 // Tipo local alineado con la respuesta real del hook (refleja nullables del DB)
 type RutaRow = {
@@ -121,8 +122,8 @@ export default function RutasPage() {
         header: 'Días de visita',
         render: (r) =>
           r.dias_visita && r.dias_visita.length > 0
-            ? r.dias_visita
-                .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+            ? normalizeDiasVisita(r.dias_visita)
+                .map((d) => formatDiaVisita(d))
                 .join(', ')
             : '—',
       },
@@ -143,17 +144,25 @@ export default function RutasPage() {
         header: '',
         render: (r) => (
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => handleEditar(r)}>
-              <Pencil size={14} aria-label="Editar" />
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`Editar ruta ${r.nombre}`}
+              title={`Editar ruta ${r.nombre}`}
+              onClick={() => handleEditar(r)}
+            >
+              <Pencil size={14} aria-hidden />
             </Button>
             {r.estado === 'activa' && (
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label={`Desactivar ruta ${r.nombre}`}
+                title={`Desactivar ruta ${r.nombre}`}
                 className="text-red-500 hover:text-red-600 hover:bg-red-50"
                 onClick={() => setDesactivarTarget(r)}
               >
-                <PowerOff size={14} aria-label="Desactivar" />
+                <PowerOff size={14} aria-hidden />
               </Button>
             )}
           </div>
@@ -203,6 +212,7 @@ export default function RutasPage() {
       />
 
       <RutaSheet
+        key={`${sheetOpen ? 'open' : 'closed'}-${editingRuta?.id ?? 'new'}`}
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open)

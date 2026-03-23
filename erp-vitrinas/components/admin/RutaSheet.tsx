@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -15,6 +15,8 @@ import { useColaboradoras } from '@/lib/hooks/useColaboradoras'
 import { useZonas } from '@/lib/hooks/useZonas'
 import { usePuntosDeVenta } from '@/lib/hooks/usePuntosDeVenta'
 import { PDVSortableList } from '@/components/admin/PDVSortableList'
+import { DIAS_VISITA_OPTIONS, normalizeDiasVisita } from '@/lib/rutas'
+import type { DiaVisita } from '@/lib/rutas'
 import type { z } from 'zod'
 
 // z.input para que los defaults del schema sean opcionales en el formulario
@@ -44,16 +46,23 @@ interface RutaSheetProps {
   }
 }
 
-// Días de visita disponibles
-const DIAS = [
-  { value: 'lun', label: 'Lun' },
-  { value: 'mar', label: 'Mar' },
-  { value: 'mié', label: 'Mié' },
-  { value: 'jue', label: 'Jue' },
-  { value: 'vie', label: 'Vie' },
-  { value: 'sáb', label: 'Sáb' },
-  { value: 'dom', label: 'Dom' },
-]
+function buildPdvsEnRuta(
+  ruta: RutaSheetProps['ruta'],
+  pdvsData: Array<{ id: string; nombre_comercial: string }>
+): PdvEnRuta[] {
+  if (!ruta?.rutas_pdv?.length) return []
+
+  return [...ruta.rutas_pdv]
+    .sort((a, b) => a.orden_visita - b.orden_visita)
+    .map((rpv) => {
+      const pdv = pdvsData.find((item) => item.id === rpv.pdv_id)
+      return {
+        pdv_id: rpv.pdv_id,
+        orden_visita: rpv.orden_visita,
+        nombre: pdv?.nombre_comercial ?? rpv.pdv_id,
+      }
+    })
+}
 
 export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
   const { data: colaboradoras = [] } = useColaboradoras()
@@ -62,16 +71,17 @@ export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
 
   const createRuta = useCreateRuta()
   const updateRuta = useUpdateRuta()
+  const initialPdvsEnRuta = useMemo(() => buildPdvsEnRuta(ruta, pdvsData), [ruta, pdvsData])
 
   // Lista de PDVs asignados a la ruta (con nombre para mostrar)
-  const [pdvsEnRuta, setPdvsEnRuta] = useState<PdvEnRuta[]>([])
+  const [pdvsEnRuta, setPdvsEnRuta] = useState<PdvEnRuta[]>(initialPdvsEnRuta)
   const [busquedaPdv, setBusquedaPdv] = useState('')
 
   const {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<RutaFormInput, unknown, RutaFormOutput>({
@@ -83,9 +93,10 @@ export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
     },
   })
 
-  const diasVisita = watch('dias_visita') ?? []
+  const diasVisita = (useWatch({ control, name: 'dias_visita' }) ?? []) as DiaVisita[]
 
-  // Resetear formulario y lista de PDVs cuando cambia la ruta o el estado del sheet
+  // Resetear formulario cuando cambia la ruta o el estado del sheet.
+  // El estado local de PDVs se reinicia al remontar el sheet vía `key`.
   useEffect(() => {
     if (!open) return
 
@@ -96,27 +107,10 @@ export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
         colaboradora_id: ruta.colaboradora_id,
         zona_id: ruta.zona_id ?? undefined,
         frecuencia: ruta.frecuencia,
-        dias_visita: ruta.dias_visita,
+        dias_visita: normalizeDiasVisita(ruta.dias_visita),
         estado: ruta.estado,
         nota_reasignacion: ruta.nota_reasignacion ?? '',
       })
-
-      // Reconstruir lista de PDVs con nombres
-      if (ruta.rutas_pdv && ruta.rutas_pdv.length > 0) {
-        const pdvsConNombre: PdvEnRuta[] = ruta.rutas_pdv
-          .sort((a, b) => a.orden_visita - b.orden_visita)
-          .map((rpv) => {
-            const pdv = pdvsData.find((p) => p.id === rpv.pdv_id)
-            return {
-              pdv_id: rpv.pdv_id,
-              orden_visita: rpv.orden_visita,
-              nombre: pdv?.nombre_comercial ?? rpv.pdv_id,
-            }
-          })
-        setPdvsEnRuta(pdvsConNombre)
-      } else {
-        setPdvsEnRuta([])
-      }
     } else {
       reset({
         codigo: '',
@@ -127,11 +121,8 @@ export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
         dias_visita: [],
         estado: 'activa',
       })
-      setPdvsEnRuta([])
     }
-
-    setBusquedaPdv('')
-  }, [open, ruta, reset, pdvsData])
+  }, [open, ruta, reset])
 
   // PDVs activos que aún no están en la ruta
   const pdvsIdsEnRuta = new Set(pdvsEnRuta.map((p) => p.pdv_id))
@@ -161,7 +152,7 @@ export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
   }
 
   // Manejar cambio en checkbox de días de visita
-  function toggleDia(dia: string, checked: boolean) {
+  function toggleDia(dia: DiaVisita, checked: boolean) {
     const actuales = diasVisita
     if (checked) {
       setValue('dias_visita', [...actuales, dia])
@@ -198,6 +189,9 @@ export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{ruta ? 'Editar ruta' : 'Nueva ruta'}</SheetTitle>
+          <SheetDescription>
+            Configura la colaboradora, los días de visita y el orden de los puntos de venta.
+          </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
@@ -279,7 +273,7 @@ export function RutaSheet({ open, onOpenChange, ruta }: RutaSheetProps) {
 
               <Field label="Días de visita" error={errors.dias_visita?.message}>
                 <div className="flex flex-wrap gap-3">
-                  {DIAS.map((dia) => (
+                  {DIAS_VISITA_OPTIONS.map((dia) => (
                     <label key={dia.value} className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"

@@ -15,7 +15,7 @@ ERP-CRM system for managing electronic accessories in consignment display cases 
 - **Storage:** Supabase Storage (visit photos in private bucket)
 - **Realtime:** Supabase Realtime websockets (dashboard live updates)
 - **Validation:** Zod (client + Edge Functions) + React Hook Form
-- **Testing:** Playwright (e2e) — Vitest not yet configured
+- **Testing:** Playwright (e2e) + Vitest (unit, jsdom environment)
 - **Hosting:** Vercel (frontend) + Supabase Cloud
 
 ## Working Directory
@@ -40,10 +40,14 @@ npm run lint
 npm run type-check        # tsc --noEmit
 npm run format            # prettier --write .
 
+# Tests (Vitest unit)
+npm test                                 # Run once
+npm run test:watch                       # Watch mode
+
 # Tests (Playwright e2e)
-npx playwright test                      # All e2e tests
-npx playwright test tests/sprint1.spec.ts  # Single spec file
-npx playwright test --ui                 # Interactive mode
+npm run test:e2e                         # All e2e tests
+npm run test:e2e -- tests/sprint1.spec.ts  # Single spec file
+npm run test:e2e -- --ui                 # Interactive mode
 
 # Supabase types (run after schema changes)
 supabase gen types typescript --local > lib/supabase/database.types.ts

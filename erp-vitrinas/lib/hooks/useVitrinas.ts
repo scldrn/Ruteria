@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/database.types'
 import type { VitrinaFormValues } from '@/lib/validations/vitrinas'
+import { getBusinessDate } from '@/lib/dates'
 
 type Vitrina = Database['public']['Tables']['vitrinas']['Row'] & {
   puntos_de_venta: { nombre_comercial: string; zona_id: string | null } | null
@@ -60,7 +61,7 @@ export function useRetirarVitrina() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('vitrinas')
-        .update({ estado: 'retirada', fecha_retiro: new Date().toISOString().split('T')[0] })
+        .update({ estado: 'retirada', fecha_retiro: getBusinessDate() })
         .eq('id', id)
       if (error) throw new Error(error.message)
     },

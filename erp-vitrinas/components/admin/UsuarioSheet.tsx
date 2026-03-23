@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import {
@@ -73,24 +73,29 @@ export function UsuarioSheet({ open, onClose, usuario }: UsuarioSheetProps) {
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{isEditing ? 'Editar usuario' : 'Nuevo usuario'}</SheetTitle>
+          <SheetDescription>
+            {isEditing
+              ? 'Actualiza el nombre, rol y estado del usuario seleccionado.'
+              : 'Crea un usuario con contraseña temporal y rol inicial.'}
+          </SheetDescription>
         </SheetHeader>
 
         {isEditing ? (
           <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="space-y-4 mt-6">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Correo (no editable)</label>
-              <input value={usuario?.email ?? ''} disabled className={`${inputCls} bg-slate-50 text-slate-400`} />
+              <label htmlFor="usuario-email" className="block text-xs font-medium text-slate-600 mb-1">Correo (no editable)</label>
+              <input id="usuario-email" value={usuario?.email ?? ''} disabled className={`${inputCls} bg-slate-50 text-slate-400`} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
-              <input {...updateForm.register('nombre')} className={inputCls} />
+              <label htmlFor="usuario-nombre" className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
+              <input id="usuario-nombre" {...updateForm.register('nombre')} className={inputCls} />
               {updateForm.formState.errors.nombre && (
                 <p className="text-xs text-red-500 mt-1">{updateForm.formState.errors.nombre.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Rol *</label>
-              <select {...updateForm.register('rol')} className={inputCls}>
+              <label htmlFor="usuario-rol" className="block text-xs font-medium text-slate-600 mb-1">Rol *</label>
+              <select id="usuario-rol" {...updateForm.register('rol')} className={inputCls}>
                 {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
@@ -108,29 +113,29 @@ export function UsuarioSheet({ open, onClose, usuario }: UsuarioSheetProps) {
         ) : (
           <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4 mt-6">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
-              <input {...createForm.register('nombre')} className={inputCls} />
+              <label htmlFor="usuario-create-nombre" className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
+              <input id="usuario-create-nombre" {...createForm.register('nombre')} className={inputCls} />
               {createForm.formState.errors.nombre && (
                 <p className="text-xs text-red-500 mt-1">{createForm.formState.errors.nombre.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Correo electrónico *</label>
-              <input {...createForm.register('email')} type="email" className={inputCls} />
+              <label htmlFor="usuario-create-email" className="block text-xs font-medium text-slate-600 mb-1">Correo electrónico *</label>
+              <input id="usuario-create-email" {...createForm.register('email')} type="email" autoComplete="email" className={inputCls} />
               {createForm.formState.errors.email && (
                 <p className="text-xs text-red-500 mt-1">{createForm.formState.errors.email.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Contraseña temporal *</label>
-              <input {...createForm.register('password')} type="password" className={inputCls} />
+              <label htmlFor="usuario-create-password" className="block text-xs font-medium text-slate-600 mb-1">Contraseña temporal *</label>
+              <input id="usuario-create-password" {...createForm.register('password')} type="password" autoComplete="new-password" className={inputCls} />
               {createForm.formState.errors.password && (
                 <p className="text-xs text-red-500 mt-1">{createForm.formState.errors.password.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Rol *</label>
-              <select {...createForm.register('rol')} className={inputCls}>
+              <label htmlFor="usuario-create-rol" className="block text-xs font-medium text-slate-600 mb-1">Rol *</label>
+              <select id="usuario-create-rol" {...createForm.register('rol')} className={inputCls}>
                 <option value="">Seleccionar rol...</option>
                 {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>

@@ -24,6 +24,7 @@ erp-vitrinas/supabase/.temp
 
 # Visual companion
 .superpowers/
+.claude/settings.local.json
 
 # Misc
 .DS_Store

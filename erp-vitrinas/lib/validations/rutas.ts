@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { DIAS_VISITA_VALUES } from '@/lib/rutas'
 
 // Schema para datos básicos de la ruta
 export const rutaSchema = z.object({
@@ -7,7 +8,7 @@ export const rutaSchema = z.object({
   colaboradora_id: z.string().uuid('Selecciona una colaboradora'),
   zona_id: z.string().uuid().optional(),
   frecuencia: z.enum(['diaria', 'semanal', 'quincenal']).default('semanal'),
-  dias_visita: z.array(z.string()).default([]),
+  dias_visita: z.array(z.enum(DIAS_VISITA_VALUES)).default([]),
   estado: z.enum(['activa', 'inactiva']).default('activa'),
   nota_reasignacion: z.string().optional(),
 })

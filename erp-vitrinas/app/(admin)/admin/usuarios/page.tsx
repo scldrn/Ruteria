@@ -45,8 +45,14 @@ export default function UsuariosPage() {
       key: 'acciones',
       header: '',
       render: (u) => (
-        <Button variant="ghost" size="sm" onClick={() => { setEditing(u); setSheetOpen(true) }}>
-          <Pencil size={14} />
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Editar usuario ${u.nombre}`}
+          title={`Editar usuario ${u.nombre}`}
+          onClick={() => { setEditing(u); setSheetOpen(true) }}
+        >
+          <Pencil size={14} aria-hidden />
         </Button>
       ),
       className: 'w-12',

@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { categoriaSchema } from '@/lib/validations/categorias'
@@ -73,6 +73,9 @@ export function CategoriaSheet({ open, onClose, categoria }: CategoriaSheetProps
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{categoria ? 'Editar categoría' : 'Nueva categoría'}</SheetTitle>
+          <SheetDescription>
+            Organiza los productos por categoría y controla si están activas.
+          </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
           <Field label="Nombre *" error={errors.nombre?.message}>

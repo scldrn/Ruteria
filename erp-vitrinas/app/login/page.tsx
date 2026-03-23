@@ -17,17 +17,28 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    try {
+      const supabase = createClient()
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (authError) {
-      setError('Correo o contraseña incorrectos')
+      if (authError) {
+        setError('Correo o contraseña incorrectos')
+        return
+      }
+
+      const rol = data.user.app_metadata?.rol as string | undefined
+      if (!rol) {
+        setError('Tu usuario no tiene un rol configurado. Contacta al administrador.')
+        await supabase.auth.signOut()
+        return
+      }
+
+      router.push(rol === 'colaboradora' ? '/campo/ruta-del-dia' : '/admin/dashboard')
+    } catch {
+      setError('No se pudo iniciar sesión. Verifica tu conexión e inténtalo de nuevo.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    const rol = data.user.app_metadata?.rol as string | undefined
-    router.push(rol === 'colaboradora' ? '/campo/ruta-del-dia' : '/admin/dashboard')
   }
 
   return (
@@ -46,6 +57,7 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -61,6 +73,7 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -70,7 +83,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-xs text-red-400 text-center">{error}</p>
+            <p role="alert" aria-live="polite" className="text-xs text-red-400 text-center">{error}</p>
           )}
 
           <Button

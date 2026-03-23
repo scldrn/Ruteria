@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { entradaInventarioSchema } from '@/lib/validations/inventario'
@@ -58,6 +58,9 @@ export function InventarioCentralSheet({ open, onOpenChange }: InventarioCentral
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Registrar entrada por compra</SheetTitle>
+          <SheetDescription>
+            Registra entradas al inventario central con cantidad, costo y notas opcionales.
+          </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
