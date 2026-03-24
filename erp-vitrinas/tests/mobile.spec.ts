@@ -21,6 +21,7 @@ test.describe('Mobile — campo viewport (iPhone 14)', () => {
     await page.click('button[type="submit"]')
     await page.waitForURL('**/ruta-del-dia')
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByText(/en linea|sin conexion/i)).toBeVisible()
     const vw = page.viewportSize()!.width
     const pageBox = await page.locator('main, [role="main"], body > div').first().boundingBox()
     if (pageBox) expect(pageBox.width).toBeLessThanOrEqual(vw + 5)

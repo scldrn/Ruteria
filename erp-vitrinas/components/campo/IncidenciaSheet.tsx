@@ -98,7 +98,9 @@ export function IncidenciaSheet({
         fotos: fotos.map((foto) => foto.file),
       })
 
-      if (result.fotosFallidas > 0) {
+      if (result.pendingOffline) {
+        toast.success('Incidencia guardada en este dispositivo. Se sincronizara al reconectar.')
+      } else if (result.fotosFallidas > 0) {
         toast.warning(`Incidencia registrada. ${result.fotosFallidas} foto(s) no se pudieron subir.`)
       } else {
         toast.success('Incidencia registrada correctamente')

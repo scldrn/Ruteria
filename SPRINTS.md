@@ -136,18 +136,18 @@ Decisiones técnicas:
 
 ### Sprint 6 — Modo Offline + QA + Pulido UX Móvil
 **Objetivo:** App de campo funciona sin internet; estabilización y pruebas con colaboradoras.
-**Estado general:** `[ ]` pendiente
+**Estado general:** `[x]` completado (2026-03-23)
 
 | # | Tarea | Estado | Notas |
 |---|-------|--------|-------|
-| S6-01 | Service worker: cachear ruta del día e inventario de vitrinas en IndexedDB | `[ ]` | |
-| S6-02 | Guardar visita completa offline y sincronizar al reconectar | `[ ]` | |
-| S6-03 | Indicador de estado de conexión en la app móvil | `[ ]` | |
-| S6-04 | Compresión automática de fotos antes de subir (max 800 KB, formatos JPG/PNG/WEBP) | `[ ]` | |
-| S6-05 | Tests e2e Playwright: login, visita completa, cierre con reposición | `[ ]` | |
-| S6-06 | Tests RLS: verificar que cada rol solo accede a lo que le corresponde | `[ ]` | |
-| S6-07 | Ajustes UX móvil (feedback de carga, errores Supabase visibles, accesibilidad) | `[ ]` | |
-| S6-08 | Bug fixes del MVP | `[ ]` | |
+| S6-01 | Service worker: cachear ruta del día e inventario de vitrinas en IndexedDB | `[x]` | `manifest.webmanifest`, `sw.js`, snapshots `route/visit` y stores offline |
+| S6-02 | Guardar visita completa offline y sincronizar al reconectar | `[x]` | Cola para `start`, `save-count`, `mark-no-realizada`, `upload-photo`, `create-incidencia` y `close` |
+| S6-03 | Indicador de estado de conexión en la app móvil | `[x]` | `ConnectionStatusBar` con estados `online/offline/syncing/pending/error` |
+| S6-04 | Compresión automática de fotos antes de subir (max 800 KB, formatos JPG/PNG/WEBP) | `[x]` | `lib/offline/compression.ts` usado en fotos de visita e incidencia |
+| S6-05 | Tests e2e Playwright: login, visita completa, cierre con reposición | `[x]` | Regresiones `sprint3`, `sprint4`, `sprint6-offline`, `sprint6-mobile`, `mobile` |
+| S6-06 | Tests RLS: verificar que cada rol solo accede a lo que le corresponde | `[x]` | `sprint5-rls.spec.ts` ampliado con `sync_operaciones_visita` |
+| S6-07 | Ajustes UX móvil (feedback de carga, errores Supabase visibles, accesibilidad) | `[x]` | Banners persistentes, toasts offline claros y spec móvil dedicada |
+| S6-08 | Bug fixes del MVP | `[x]` | Hardening de hydration, sync queue, selectors E2E y flujo offline completo |
 
 ---
 
@@ -202,6 +202,7 @@ Decisiones técnicas:
 | 2026-03-22 | Sprint 2 | Completado | Módulos Vitrinas (listado + detalle tabs), Inventario Central y Rutas con DnD. Dependencias: @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities. |
 | 2026-03-23 | Sprint 4 | Completado | Flujo completo de cierre de visita: cobro, reposición, fotos opcionales y cierre transaccional vía RPC. Admin: formas de pago e inventario de colaboradoras. |
 | 2026-03-23 | Sprint 5 | Completado | Inventario avanzado: bajas, historial y valorizado. Incidencias: captura en campo, gestión admin y ciclo de vida validado en DB. |
+| 2026-03-23 | Sprint 6 | Completado | Offline de campo con IndexedDB + cola de sync + RPC idempotente para cierre de visita, fotos/incidencias pendientes, compresión y QA móvil/offline. |
 
 ---
 
@@ -258,6 +259,14 @@ Decisiones técnicas:
 **Bucket de fotos:** El nombre consistente del bucket en local y RLS es `fotos-visita`. Evitar variantes como `visitas-fotos` o `fotos-visitas` en código nuevo.
 
 **Regresión de Sprint 3:** Con Sprint 4, `guardarConteo` ya no redirige a ruta; ahora avanza a cobro dentro de `/campo/visita/[id]`. Los tests de Sprint 3 deben validar esa transición.
+
+### Decisiones Sprint 6 (relevantes para sprints futuros)
+
+**Offline explícito por dominio:** No persistir toda la cache de React Query como estrategia principal. Sprint 6 planea una capa propia `lib/offline/*` con snapshots, drafts, cola y blobs pendientes en IndexedDB.
+
+**Cierre offline idempotente:** `cerrar_visita()` no es suficiente para reintentos ambiguos tras pérdida de red. Sprint 6 debe introducir un RPC idempotente respaldado por `client_sync_id`.
+
+**PWA manual:** El plan de Sprint 6 usa `service worker` propio + `manifest.webmanifest`, evitando dependencias pesadas tipo `next-pwa` para mantener control fino del alcance offline.
 
 ### Decisiones Sprint 5 (relevantes para sprints futuros)
 

@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { getBusinessDayUtcRange } from '@/lib/dates'
+import { getBusinessDate, getBusinessDayUtcRange } from '@/lib/dates'
+import { applyVisitDraftToRoute, listVisitDrafts } from '@/lib/offline/drafts'
+import { isProbablyOfflineError } from '@/lib/offline/network'
+import { getRouteSnapshot, saveRouteSnapshot } from '@/lib/offline/snapshots'
 
 export type VisitaDelDia = {
   id: string
@@ -12,6 +15,13 @@ export type VisitaDelDia = {
   pdv: { nombre_comercial: string; direccion: string | null }
   ruta: { nombre: string }
   orden_visita: number
+  syncStatus?: 'pending' | 'error'
+}
+
+type RutaDelDiaResult = {
+  visitas: VisitaDelDia[]
+  source: 'remote' | 'snapshot'
+  lastSyncedAt: string | null
 }
 
 const SELECT = `
@@ -71,50 +81,91 @@ function mapRow(v: RawVisita): VisitaDelDia {
 
 export function useRutaDelDia() {
   const supabase = createClient()
+  const todayKey = getBusinessDate()
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['ruta-del-dia'],
-    queryFn: async (): Promise<VisitaDelDia[]> => {
-      const { start, end } = getBusinessDayUtcRange()
+    queryFn: async (): Promise<RutaDelDiaResult> => {
+      try {
+        const { start, end } = getBusinessDayUtcRange()
 
-      const [planificadas, activas, noRealizadas] = await Promise.all([
-        supabase
-          .from('visitas')
-          .select(SELECT)
-          .eq('estado', 'planificada')
-          .gte('created_at', start)
-          .lt('created_at', end),
-        supabase
-          .from('visitas')
-          .select(SELECT)
-          .in('estado', ['en_ejecucion', 'completada'])
-          .not('fecha_hora_inicio', 'is', null)
-          .gte('fecha_hora_inicio', start)
-          .lt('fecha_hora_inicio', end),
-        supabase
-          .from('visitas')
-          .select(SELECT)
-          .eq('estado', 'no_realizada')
-          .gte('created_at', start)
-          .lt('created_at', end),
-      ])
+        const [planificadas, activas, noRealizadas] = await Promise.all([
+          supabase
+            .from('visitas')
+            .select(SELECT)
+            .eq('estado', 'planificada')
+            .gte('created_at', start)
+            .lt('created_at', end),
+          supabase
+            .from('visitas')
+            .select(SELECT)
+            .in('estado', ['en_ejecucion', 'completada'])
+            .not('fecha_hora_inicio', 'is', null)
+            .gte('fecha_hora_inicio', start)
+            .lt('fecha_hora_inicio', end),
+          supabase
+            .from('visitas')
+            .select(SELECT)
+            .eq('estado', 'no_realizada')
+            .gte('created_at', start)
+            .lt('created_at', end),
+        ])
 
-      if (planificadas.error) throw new Error(planificadas.error.message)
-      if (activas.error) throw new Error(activas.error.message)
-      if (noRealizadas.error) throw new Error(noRealizadas.error.message)
+        if (planificadas.error) throw new Error(planificadas.error.message)
+        if (activas.error) throw new Error(activas.error.message)
+        if (noRealizadas.error) throw new Error(noRealizadas.error.message)
 
-      const deduped = new Map<string, VisitaDelDia>()
+        const deduped = new Map<string, VisitaDelDia>()
 
-      for (const visita of [
-        ...(planificadas.data ?? []),
-        ...(activas.data ?? []),
-        ...(noRealizadas.data ?? []),
-      ]) {
-        const mapped = mapRow(visita as unknown as RawVisita)
-        deduped.set(mapped.id, mapped)
+        for (const visita of [
+          ...(planificadas.data ?? []),
+          ...(activas.data ?? []),
+          ...(noRealizadas.data ?? []),
+        ]) {
+          const mapped = mapRow(visita as unknown as RawVisita)
+          deduped.set(mapped.id, mapped)
+        }
+
+        const drafts = await listVisitDrafts()
+        const draftMap = new Map(drafts.map((draft) => [draft.visitId, draft]))
+        const visitas = Array.from(deduped.values())
+          .map((visita) => applyVisitDraftToRoute(visita, draftMap.get(visita.id) ?? null))
+          .sort((a, b) => a.orden_visita - b.orden_visita)
+        await saveRouteSnapshot(todayKey, visitas)
+
+        return {
+          visitas,
+          source: 'remote',
+          lastSyncedAt: new Date().toISOString(),
+        }
+      } catch (error) {
+        if (!isProbablyOfflineError(error)) {
+          throw error
+        }
+
+        const snapshot = await getRouteSnapshot(todayKey)
+        if (!snapshot) {
+          throw error
+        }
+
+        const drafts = await listVisitDrafts()
+        const draftMap = new Map(drafts.map((draft) => [draft.visitId, draft]))
+
+        return {
+          visitas: snapshot.visitas.map((visita) =>
+            applyVisitDraftToRoute(visita, draftMap.get(visita.id) ?? null)
+          ),
+          source: 'snapshot',
+          lastSyncedAt: snapshot.savedAt,
+        }
       }
-
-      return Array.from(deduped.values()).sort((a, b) => a.orden_visita - b.orden_visita)
     },
   })
+
+  return {
+    ...query,
+    data: query.data?.visitas ?? [],
+    isOfflineFallback: query.data?.source === 'snapshot',
+    lastSyncedAt: query.data?.lastSyncedAt ?? null,
+  }
 }

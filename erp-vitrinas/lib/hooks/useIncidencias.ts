@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { compressImageFile } from '@/lib/offline/compression'
+import {
+  listPendingIncidenciasByVisit,
+  putPendingIncidencia,
+} from '@/lib/offline/incidencias'
+import { isProbablyOfflineError } from '@/lib/offline/network'
+import { putPendingPhoto } from '@/lib/offline/photos'
+import { enqueueCreateIncidencia } from '@/lib/offline/queue'
 import type { Database } from '@/lib/supabase/database.types'
 import type {
   ActualizarIncidenciaInput,
@@ -49,6 +57,7 @@ export type IncidenciaItem = {
   vitrina_codigo: string | null
   fotos: FotoIncidencia[]
   dias_abierta: number
+  syncStatus?: 'pending' | 'error'
 }
 
 const QUERY_KEY = ['incidencias'] as const
@@ -65,6 +74,11 @@ export function useIncidencias(filtros: FiltrosIncidencias = {}) {
   return useQuery({
     queryKey: [...QUERY_KEY, filtros],
     queryFn: async (): Promise<IncidenciaItem[]> => {
+      const pendingLocal =
+        typeof window !== 'undefined' && filtros.visitaId
+          ? await listPendingIncidenciasByVisit(filtros.visitaId)
+          : []
+
       let query = supabase
         .from('incidencias')
         .select(`
@@ -105,7 +119,36 @@ export function useIncidencias(filtros: FiltrosIncidencias = {}) {
       }
 
       const { data, error } = await query
-      if (error) throw new Error(error.message)
+      if (error) {
+        const wrappedError = new Error(error.message)
+
+        if (isProbablyOfflineError(wrappedError) && filtros.visitaId) {
+          return pendingLocal.map((item) => ({
+            id: item.id,
+            visita_id: item.visitId,
+            pdv_id: item.pdvId,
+            vitrina_id: item.vitrinaId,
+            tipo: item.tipo,
+            descripcion: item.descripcion,
+            estado: 'abierta',
+            responsable_id: null,
+            responsable_nombre: null,
+            resolucion: null,
+            fecha_apertura: item.createdAt,
+            fecha_cierre: null,
+            created_at: item.createdAt,
+            created_by: item.createdBy,
+            creador_nombre: null,
+            pdv_nombre: 'Pendiente de sincronizar',
+            vitrina_codigo: null,
+            fotos: [],
+            dias_abierta: calcularDiasAbierta(item.createdAt, null),
+            syncStatus: item.syncStatus,
+          }))
+        }
+
+        throw wrappedError
+      }
 
       type RawIncidencia = typeof data extends (infer T)[] | null ? T : never
 
@@ -132,7 +175,7 @@ export function useIncidencias(filtros: FiltrosIncidencias = {}) {
         })
       }
 
-      return (data ?? []).map((item: RawIncidencia) => {
+      const remoteItems = (data ?? []).map((item: RawIncidencia) => {
         const pdv = firstOrNull(item.puntos_de_venta as MaybeArray<{ nombre_comercial: string }>)
         const vitrina = firstOrNull(item.vitrinas as MaybeArray<{ codigo: string }>)
         const responsable = firstOrNull(item.responsable as MaybeArray<{ nombre: string }>)
@@ -168,6 +211,31 @@ export function useIncidencias(filtros: FiltrosIncidencias = {}) {
           dias_abierta: calcularDiasAbierta(item.fecha_apertura, item.fecha_cierre ?? null),
         }
       })
+
+      const pendingItems = pendingLocal.map((item) => ({
+        id: item.id,
+        visita_id: item.visitId,
+        pdv_id: item.pdvId,
+        vitrina_id: item.vitrinaId,
+        tipo: item.tipo,
+        descripcion: item.descripcion,
+        estado: 'abierta',
+        responsable_id: null,
+        responsable_nombre: null,
+        resolucion: null,
+        fecha_apertura: item.createdAt,
+        fecha_cierre: null,
+        created_at: item.createdAt,
+        created_by: item.createdBy,
+        creador_nombre: null,
+        pdv_nombre: 'Pendiente de sincronizar',
+        vitrina_codigo: null,
+        fotos: [],
+        dias_abierta: calcularDiasAbierta(item.createdAt, null),
+        syncStatus: item.syncStatus,
+      }))
+
+      return [...pendingItems, ...remoteItems]
     },
   })
 }
@@ -194,66 +262,135 @@ export function useCrearIncidencia() {
         data: { user },
       } = await supabase.auth.getUser()
 
-      const { data: incidencia, error } = await supabase
-        .from('incidencias')
-        .insert({
+      const compressedPhotos = await Promise.all(fotos.map((file) => compressImageFile(file)))
+
+      try {
+        const incidenciaId = crypto.randomUUID()
+        const { data: incidencia, error } = await supabase
+          .from('incidencias')
+          .insert({
+            id: incidenciaId,
+            tipo: values.tipo,
+            descripcion: values.descripcion,
+            estado: 'abierta',
+            pdv_id: pdvId,
+            visita_id: visitaId ?? null,
+            vitrina_id: vitrinaId ?? null,
+            created_by: user?.id ?? null,
+          })
+          .select('id')
+          .single()
+
+        if (error || !incidencia) {
+          throw new Error(error?.message ?? 'No se pudo crear la incidencia')
+        }
+
+        let fotosSubidas = 0
+        let fotosFallidas = 0
+        const fotosRows: Database['public']['Tables']['fotos_incidencia']['Insert'][] = []
+
+        for (const file of compressedPhotos) {
+          const photoId = crypto.randomUUID()
+          const extension = file.name.split('.').pop() || 'jpg'
+          const storagePath = `incidencias/${incidencia.id}/${photoId}.${extension}`
+
+          const { data: uploaded, error: uploadError } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(storagePath, file, {
+              upsert: false,
+              contentType: file.type || 'image/jpeg',
+            })
+
+          if (uploadError || !uploaded) {
+            fotosFallidas += 1
+            continue
+          }
+
+          fotosSubidas += 1
+          fotosRows.push({
+            id: photoId,
+            incidencia_id: incidencia.id,
+            url: uploaded.path,
+            created_by: user?.id ?? null,
+          })
+        }
+
+        if (fotosRows.length > 0) {
+          const { error: fotosError } = await supabase
+            .from('fotos_incidencia')
+            .insert(fotosRows)
+
+          if (fotosError) {
+            throw new Error(fotosError.message)
+          }
+        }
+
+        return {
+          incidenciaId: incidencia.id,
+          fotosSubidas,
+          fotosFallidas,
+          pendingOffline: false,
+        }
+      } catch (error) {
+        if (!isProbablyOfflineError(error)) {
+          throw error
+        }
+
+        const localIncidenciaId = crypto.randomUUID()
+        const photoIds: string[] = []
+
+        for (const file of compressedPhotos) {
+          const photoId = crypto.randomUUID()
+          const extension = file.name.split('.').pop() || 'jpg'
+          const storagePath = `incidencias/${localIncidenciaId}/${photoId}.${extension}`
+
+          photoIds.push(photoId)
+          await putPendingPhoto({
+            id: photoId,
+            visitId: visitaId ?? '',
+            entityType: 'incidencia',
+            entityId: localIncidenciaId,
+            storagePath,
+            tipo: null,
+            blob: file,
+            mimeType: file.type || 'image/jpeg',
+            createdAt: new Date().toISOString(),
+            syncStatus: 'pending',
+            lastError: null,
+          })
+        }
+
+        await putPendingIncidencia({
+          id: localIncidenciaId,
+          visitId: visitaId ?? '',
+          pdvId,
+          vitrinaId: vitrinaId ?? null,
           tipo: values.tipo,
           descripcion: values.descripcion,
-          estado: 'abierta',
-          pdv_id: pdvId,
-          visita_id: visitaId ?? null,
-          vitrina_id: vitrinaId ?? null,
-          created_by: user?.id ?? null,
+          createdBy: user?.id ?? null,
+          createdAt: new Date().toISOString(),
+          syncStatus: 'pending',
+          lastError: null,
+          photoIds,
         })
-        .select('id')
-        .single()
 
-      if (error || !incidencia) {
-        throw new Error(error?.message ?? 'No se pudo crear la incidencia')
-      }
-
-      let fotosSubidas = 0
-      let fotosFallidas = 0
-      const fotosRows: Database['public']['Tables']['fotos_incidencia']['Insert'][] = []
-
-      for (const file of fotos) {
-        const extension = file.name.split('.').pop() || 'jpg'
-        const storagePath = `incidencias/${incidencia.id}/${Date.now()}-${crypto.randomUUID()}.${extension}`
-
-        const { data: uploaded, error: uploadError } = await supabase.storage
-          .from(STORAGE_BUCKET)
-          .upload(storagePath, file, {
-            upsert: false,
-            contentType: file.type || 'image/jpeg',
+        if (visitaId) {
+          await enqueueCreateIncidencia(visitaId, {
+            incidencia_id: localIncidenciaId,
+            pdv_id: pdvId,
+            vitrina_id: vitrinaId ?? null,
+            tipo: values.tipo,
+            descripcion: values.descripcion,
+            photo_ids: photoIds,
           })
-
-        if (uploadError || !uploaded) {
-          fotosFallidas += 1
-          continue
         }
 
-        fotosSubidas += 1
-        fotosRows.push({
-          incidencia_id: incidencia.id,
-          url: uploaded.path,
-          created_by: user?.id ?? null,
-        })
-      }
-
-      if (fotosRows.length > 0) {
-        const { error: fotosError } = await supabase
-          .from('fotos_incidencia')
-          .insert(fotosRows)
-
-        if (fotosError) {
-          throw new Error(fotosError.message)
+        return {
+          incidenciaId: localIncidenciaId,
+          fotosSubidas: 0,
+          fotosFallidas: 0,
+          pendingOffline: true,
         }
-      }
-
-      return {
-        incidenciaId: incidencia.id,
-        fotosSubidas,
-        fotosFallidas,
       }
     },
     onSuccess: () => {

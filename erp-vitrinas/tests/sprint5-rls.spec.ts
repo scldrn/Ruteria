@@ -350,3 +350,79 @@ test('analista y compras pueden consultar inventario valorizado; compras puede r
 
   expect(incidenciaCompras.error).not.toBeNull()
 })
+
+test('solo admin, supervisor y analista pueden consultar sync_operaciones_visita', async () => {
+  const { data: ruta } = await adminSupabase
+    .from('rutas')
+    .select('id')
+    .eq('colaboradora_id', colaboradoraId)
+    .limit(1)
+    .single()
+
+  const { data: visita } = await adminSupabase
+    .from('visitas')
+    .insert({
+      ruta_id: ruta!.id,
+      pdv_id: pdvId,
+      vitrina_id: vitrinaId,
+      colaboradora_id: colaboradoraId,
+      estado: 'planificada',
+    })
+    .select('id')
+    .single()
+
+  const syncId = crypto.randomUUID()
+
+  const { error: syncInsertError } = await adminSupabase.from('sync_operaciones_visita').insert({
+    client_sync_id: syncId,
+    visita_id: visita!.id,
+    tipo: 'close',
+    payload_hash: 'test',
+    created_by: adminId,
+  })
+
+  expect(syncInsertError).toBeNull()
+
+  const adminClient = await signInAs('admin@erp.local', 'Admin1234!')
+  const supervisorClient = await signInAs('supervisor@erp.local', 'Supervisor1234!')
+  const analistaClient = await signInAs('analista@erp.local', 'Analista1234!')
+  const colaboradoraClient = await signInAs('colaboradora@erp.local', 'Colab1234!')
+  const comprasClient = await signInAs('compras@erp.local', 'Compras1234!')
+
+  const adminRead = await adminClient
+    .from('sync_operaciones_visita')
+    .select('client_sync_id')
+    .eq('client_sync_id', syncId)
+
+  const supervisorRead = await supervisorClient
+    .from('sync_operaciones_visita')
+    .select('client_sync_id')
+    .eq('client_sync_id', syncId)
+
+  const analistaRead = await analistaClient
+    .from('sync_operaciones_visita')
+    .select('client_sync_id')
+    .eq('client_sync_id', syncId)
+
+  const colaboradoraRead = await colaboradoraClient
+    .from('sync_operaciones_visita')
+    .select('client_sync_id')
+    .eq('client_sync_id', syncId)
+
+  const comprasRead = await comprasClient
+    .from('sync_operaciones_visita')
+    .select('client_sync_id')
+    .eq('client_sync_id', syncId)
+
+  expect(adminRead.error).toBeNull()
+  expect(supervisorRead.error).toBeNull()
+  expect(analistaRead.error).toBeNull()
+  expect((adminRead.data ?? []).length).toBe(1)
+  expect((supervisorRead.data ?? []).length).toBe(1)
+  expect((analistaRead.data ?? []).length).toBe(1)
+
+  expect(colaboradoraRead.error).toBeNull()
+  expect(comprasRead.error).toBeNull()
+  expect((colaboradoraRead.data ?? []).length).toBe(0)
+  expect((comprasRead.data ?? []).length).toBe(0)
+})

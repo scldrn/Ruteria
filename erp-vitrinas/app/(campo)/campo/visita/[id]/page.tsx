@@ -17,6 +17,7 @@ import { VisitaFotosView, type FotoDraft } from '@/components/campo/VisitaFotosV
 import { VisitaConfirmarView } from '@/components/campo/VisitaConfirmarView'
 import { VisitaIncidenciasButton } from '@/components/campo/VisitaIncidenciasButton'
 import { IncidenciaSheet } from '@/components/campo/IncidenciaSheet'
+import { ConnectionStatusBar } from '@/components/campo/ConnectionStatusBar'
 
 type EtapaVisita = 'conteo' | 'cobro' | 'reposicion' | 'fotos' | 'confirmar_cierre'
 
@@ -33,6 +34,8 @@ export default function VisitaPage({ params }: Props) {
     data: visita,
     isLoading,
     error,
+    isOfflineFallback,
+    lastSyncedAt,
     iniciarVisita,
     guardarConteo,
     marcarNoRealizada,
@@ -44,6 +47,7 @@ export default function VisitaPage({ params }: Props) {
   if (isLoading) {
     return (
       <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        <ConnectionStatusBar />
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-48 w-full rounded-lg" />
         <Skeleton className="h-10 w-full rounded-md" />
@@ -53,7 +57,8 @@ export default function VisitaPage({ params }: Props) {
 
   if (error || !visita) {
     return (
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        <ConnectionStatusBar />
         <p className="text-red-600">Error: {error?.message ?? 'Visita no encontrada'}</p>
         <Link href="/campo/ruta-del-dia" className="text-blue-600 underline text-sm">
           ← Volver a la ruta
@@ -64,6 +69,7 @@ export default function VisitaPage({ params }: Props) {
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
+      <ConnectionStatusBar isOfflineFallback={isOfflineFallback} lastSyncedAt={lastSyncedAt} />
       {visita.estado === 'planificada' && (
         <>
           <Header

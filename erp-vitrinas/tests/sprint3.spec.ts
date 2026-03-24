@@ -13,6 +13,25 @@ const adminSupabase = createClient(
 let visitaId: string
 let colaboradoraId: string
 
+async function resetVisitaCampo(estado: 'planificada' | 'en_ejecucion') {
+  await adminSupabase.from('cobros').delete().eq('visita_id', visitaId)
+  await adminSupabase.from('detalle_visita').delete().eq('visita_id', visitaId)
+  await adminSupabase.from('fotos_visita').delete().eq('visita_id', visitaId)
+  await adminSupabase.from('incidencias').delete().eq('visita_id', visitaId)
+  await adminSupabase
+    .from('visitas')
+    .update({
+      estado,
+      fecha_hora_inicio: estado === 'en_ejecucion' ? new Date().toISOString() : null,
+      fecha_hora_fin: null,
+      monto_calculado: 0,
+      monto_cobrado: 0,
+      notas: null,
+      motivo_no_realizada: null,
+    })
+    .eq('id', visitaId)
+}
+
 test.describe('Sprint 3 — Campo', () => {
   test.beforeAll(async () => {
     // Obtener colaboradora de prueba (debe existir en el seed de auth)
@@ -103,6 +122,12 @@ test.describe('Sprint 3 — Campo', () => {
 
   async function loginColaboradora(page: Page) {
     await page.goto('/login')
+    await page.evaluate(() => {
+      window.localStorage.clear()
+      window.sessionStorage.clear()
+    })
+    await page.context().clearCookies()
+    await page.goto('/login')
     await page.getByLabel(/correo/i).fill('colaboradora@erp.local')
     await page.getByLabel(/contraseña/i).fill('Colab1234!')
     await page.click('button[type="submit"]')
@@ -118,6 +143,8 @@ test.describe('Sprint 3 — Campo', () => {
 
   // Test 2: Tap en visita planificada → pantalla de inicio
   test('tap en PDV planificada muestra pantalla de inicio con inventario anterior', async ({ page }) => {
+    await resetVisitaCampo('planificada')
+
     await loginColaboradora(page)
     await page.goto(`/campo/visita/${visitaId}`)
     await expect(page.getByText('Tienda Demo Norte')).toBeVisible()
@@ -127,7 +154,7 @@ test.describe('Sprint 3 — Campo', () => {
 
   // Test 3: Iniciar visita → en_ejecucion + hora de inicio
   test('iniciar visita cambia estado a en_ejecucion y muestra hora', async ({ page }) => {
-    await adminSupabase.from('visitas').update({ estado: 'planificada', fecha_hora_inicio: null }).eq('id', visitaId)
+    await resetVisitaCampo('planificada')
 
     await loginColaboradora(page)
     await page.goto(`/campo/visita/${visitaId}`)
@@ -139,13 +166,7 @@ test.describe('Sprint 3 — Campo', () => {
 
   // Test 4 + 5: Ingreso de conteos y transición a cobro
   test('ingresa conteos, ve cálculo live y avanza al paso de cobro', async ({ page }) => {
-    await adminSupabase
-      .from('visitas')
-      .update({ estado: 'en_ejecucion', fecha_hora_inicio: new Date().toISOString() })
-      .eq('id', visitaId)
-
-    await adminSupabase.from('detalle_visita').delete().eq('visita_id', visitaId)
-    await adminSupabase.from('cobros').delete().eq('visita_id', visitaId)
+    await resetVisitaCampo('en_ejecucion')
 
     await loginColaboradora(page)
     await page.goto(`/campo/visita/${visitaId}`)
@@ -168,7 +189,7 @@ test.describe('Sprint 3 — Campo', () => {
 
   // Test 6: Marcar no realizada
   test('marcar no realizada sin motivo muestra error; con motivo cambia estado', async ({ page }) => {
-    await adminSupabase.from('visitas').update({ estado: 'planificada', fecha_hora_inicio: null }).eq('id', visitaId)
+    await resetVisitaCampo('planificada')
 
     await loginColaboradora(page)
     await page.goto(`/campo/visita/${visitaId}`)
@@ -185,6 +206,12 @@ test.describe('Sprint 3 — Campo', () => {
 
 test.describe('Sprint 3 — Admin', () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.evaluate(() => {
+      window.localStorage.clear()
+      window.sessionStorage.clear()
+    })
+    await page.context().clearCookies()
     await page.goto('/login')
     await page.getByLabel(/correo/i).fill('admin@erp.local')
     await page.getByLabel(/contraseña/i).fill('Admin1234!')

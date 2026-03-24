@@ -3,6 +3,7 @@
 import { useRutaDelDia } from '@/lib/hooks/useRutaDelDia'
 import { RutaDelDiaCard } from '@/components/campo/RutaDelDiaCard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ConnectionStatusBar } from '@/components/campo/ConnectionStatusBar'
 
 function formatFecha(): string {
   return new Date().toLocaleDateString('es-CO', {
@@ -11,7 +12,13 @@ function formatFecha(): string {
 }
 
 export default function RutaDelDiaPage() {
-  const { data: visitas = [], isLoading, error } = useRutaDelDia()
+  const {
+    data: visitas = [],
+    isLoading,
+    error,
+    isOfflineFallback,
+    lastSyncedAt,
+  } = useRutaDelDia()
 
   const completadas = visitas.filter((v) => v.estado === 'completada').length
   const rutaNombre = visitas[0]?.ruta?.nombre ?? 'Ruta del día'
@@ -19,6 +26,7 @@ export default function RutaDelDiaPage() {
   if (isLoading) {
     return (
       <main className="max-w-lg mx-auto px-4 py-6 space-y-3">
+        <ConnectionStatusBar />
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-32" />
         {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
@@ -28,7 +36,8 @@ export default function RutaDelDiaPage() {
 
   if (error) {
     return (
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        <ConnectionStatusBar />
         <p className="text-red-600">Error cargando la ruta: {error.message}</p>
       </main>
     )
@@ -36,6 +45,7 @@ export default function RutaDelDiaPage() {
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
+      <ConnectionStatusBar isOfflineFallback={isOfflineFallback} lastSyncedAt={lastSyncedAt} />
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

@@ -46,6 +46,16 @@ export function RutaDelDiaCard({ visita }: Props) {
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-medium text-slate-400">#{visita.orden_visita}</span>
             <Badge className={`text-xs ${cfg.className}`}>{cfg.label}</Badge>
+            {visita.syncStatus === 'pending' && (
+              <Badge className="text-xs bg-amber-100 text-amber-700 border-amber-200">
+                Pendiente sync
+              </Badge>
+            )}
+            {visita.syncStatus === 'error' && (
+              <Badge className="text-xs bg-red-100 text-red-700 border-red-200">
+                Error sync
+              </Badge>
+            )}
           </div>
           <p className="font-semibold text-slate-900 truncate">{visita.pdv.nombre_comercial}</p>
           {visita.pdv.direccion && (

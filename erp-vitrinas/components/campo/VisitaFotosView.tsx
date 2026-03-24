@@ -38,6 +38,9 @@ export function VisitaFotosView({
 
       try {
         const uploaded = await onSubirFoto(file)
+        if (uploaded.url.startsWith('offline://')) {
+          toast.success('Foto guardada en este dispositivo. Se sincronizara al reconectar.')
+        }
         setFotos((current) => [
           ...current,
           {

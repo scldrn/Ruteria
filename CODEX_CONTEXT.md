@@ -8,7 +8,7 @@ Contexto operativo del proyecto para futuras sesiones de trabajo con Codex.
 - Dominio: ERP/CRM para gestionar vitrinas de accesorios electrónicos en consignación
 - Operación: 200+ puntos de venta, visitas de campo, conteo de inventario, cobros, reposición y reportes
 - App principal: `erp-vitrinas/`
-- Estado general: Sprint 1, 2, 3, 4 y 5 implementados; Sprint 6 pendiente
+- Estado general: Sprint 1, 2, 3, 4, 5 y 6 implementados
 
 ## Stack
 
@@ -63,7 +63,8 @@ El middleware lee el rol desde `user.app_metadata.rol`.
 
 ### Pendiente fuerte
 
-- Sprint 6+: offline completo, analítica, reportes avanzados y escala
+- Fase 1 completa
+- Sprint 6+: analítica, reportes avanzados y escala
 
 ## Sprint 4 esperado
 
@@ -103,6 +104,8 @@ Notas importantes:
 - `docs/superpowers/specs/2026-03-23-sprint4-design.md`: diseño funcional y técnico de Sprint 4
 - `docs/superpowers/plans/2026-03-23-sprint5-inventario-incidencias.md`: plan detallado de Sprint 5
 - `docs/superpowers/specs/2026-03-23-sprint5-design.md`: diseño funcional y técnico de Sprint 5
+- `docs/superpowers/plans/2026-03-23-sprint6-offline-qa-mobile.md`: plan detallado de Sprint 6
+- `docs/superpowers/specs/2026-03-23-sprint6-design.md`: diseño funcional y técnico de Sprint 6
 
 ## Observaciones del repo
 
@@ -123,4 +126,7 @@ Notas importantes:
 - La app activa está en `erp-vitrinas/`
 - La documentación estratégica en raíz sí es relevante y vigente
 - Si hay conflicto entre código y docs, verificar primero `CLAUDE.md` y luego el estado real del código
-- El siguiente bloque natural de trabajo es Sprint 6
+- Sprint 6 ya quedó implementado con `service worker`, snapshots en IndexedDB, drafts, cola de sincronización, fotos/incidencias pendientes y compresión de imágenes
+- La capa offline vive en `lib/offline/*` y el estado visible de sync en `useOfflineSync` + `ConnectionStatusBar`
+- El cierre offline de visita usa `cerrar_visita_offline()` con `client_sync_id` para tolerar reintentos ambiguos sin duplicar cobros ni movimientos
+- El siguiente bloque natural de trabajo es Fase 2: analítica, garantías, compras y reportes

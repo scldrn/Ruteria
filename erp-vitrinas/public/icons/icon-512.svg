@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Powerp">
+  <rect width="512" height="512" rx="118" fill="#0f172a"/>
+  <rect x="48" y="48" width="416" height="416" rx="90" fill="#111827" stroke="#38bdf8" stroke-width="16"/>
+  <path d="M154 379V133h111c67.3 0 108.6 34.2 108.6 89.8S332.3 312 265 312H205v67H154Zm51-110h57.5c40.2 0 62.2-16.2 62.2-45.9 0-29.4-22-45.2-62.2-45.2H205V269Z" fill="#f8fafc"/>
+</svg>

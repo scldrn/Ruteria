@@ -1110,6 +1110,48 @@ export type Database = {
           },
         ]
       }
+      sync_operaciones_visita: {
+        Row: {
+          client_sync_id: string
+          created_by: string | null
+          payload_hash: string | null
+          procesado_at: string
+          tipo: string
+          visita_id: string
+        }
+        Insert: {
+          client_sync_id: string
+          created_by?: string | null
+          payload_hash?: string | null
+          procesado_at?: string
+          tipo: string
+          visita_id: string
+        }
+        Update: {
+          client_sync_id?: string
+          created_by?: string | null
+          payload_hash?: string | null
+          procesado_at?: string
+          tipo?: string
+          visita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_operaciones_visita_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_operaciones_visita_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuarios: {
         Row: {
           activo: boolean
@@ -1404,6 +1446,19 @@ export type Database = {
       calcular_monto_visita: { Args: { p_visita_id: string }; Returns: number }
       cerrar_visita: {
         Args: { p_cobro: Json; p_reposiciones?: Json; p_visita_id: string }
+        Returns: undefined
+      }
+      cerrar_visita_core: {
+        Args: { p_cobro: Json; p_reposiciones?: Json; p_visita_id: string }
+        Returns: undefined
+      }
+      cerrar_visita_offline: {
+        Args: {
+          p_client_sync_id?: string
+          p_cobro: Json
+          p_reposiciones?: Json
+          p_visita_id: string
+        }
         Returns: undefined
       }
       get_kpi_ventas: {
