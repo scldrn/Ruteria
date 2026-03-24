@@ -8,7 +8,7 @@ Contexto operativo del proyecto para futuras sesiones de trabajo con Codex.
 - Dominio: ERP/CRM para gestionar vitrinas de accesorios electrónicos en consignación
 - Operación: 200+ puntos de venta, visitas de campo, conteo de inventario, cobros, reposición y reportes
 - App principal: `erp-vitrinas/`
-- Estado general: Sprint 1, 2 y 3 implementados; Sprint 4 documentado y pendiente de implementación completa
+- Estado general: Sprint 1, 2, 3, 4 y 5 implementados; Sprint 6 pendiente
 
 ## Stack
 
@@ -59,10 +59,11 @@ El middleware lee el rol desde `user.app_metadata.rol`.
 - Sprint 2 completo: vitrinas, inventario central, rutas
 - Sprint 3 completo: ruta del día, inicio de visita, conteo, dashboard admin de visitas
 - Sprint 4 completo: cobro, reposición, fotos, inventario de colaboradora y cierre transaccional
+- Sprint 5 completo: bajas auditadas, historial, valorizado e incidencias en campo/admin
 
 ### Pendiente fuerte
 
-- Sprint 5+: incidencias avanzadas, historial/bajas de inventario, reportes, offline completo, analítica y escala
+- Sprint 6+: offline completo, analítica, reportes avanzados y escala
 
 ## Sprint 4 esperado
 
@@ -91,6 +92,7 @@ Notas importantes:
 3. El stock no puede quedar negativo.
 4. Productos inactivos no deben aparecer en reposición.
 5. Primera visita a vitrina nueva usa `inv_anterior = 0`.
+6. Una incidencia no puede pasar a `resuelta` o `cerrada` sin resolución registrada.
 
 ## Archivos guía prioritarios
 
@@ -99,6 +101,8 @@ Notas importantes:
 - `ERP_CRM_Plan_v2.md`: visión global del producto
 - `docs/superpowers/plans/2026-03-23-sprint4-cierre-visita.md`: plan detallado de Sprint 4
 - `docs/superpowers/specs/2026-03-23-sprint4-design.md`: diseño funcional y técnico de Sprint 4
+- `docs/superpowers/plans/2026-03-23-sprint5-inventario-incidencias.md`: plan detallado de Sprint 5
+- `docs/superpowers/specs/2026-03-23-sprint5-design.md`: diseño funcional y técnico de Sprint 5
 
 ## Observaciones del repo
 
@@ -119,4 +123,4 @@ Notas importantes:
 - La app activa está en `erp-vitrinas/`
 - La documentación estratégica en raíz sí es relevante y vigente
 - Si hay conflicto entre código y docs, verificar primero `CLAUDE.md` y luego el estado real del código
-- El siguiente bloque natural de trabajo es Sprint 5
+- El siguiente bloque natural de trabajo es Sprint 6

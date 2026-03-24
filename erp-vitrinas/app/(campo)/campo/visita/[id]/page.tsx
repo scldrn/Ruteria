@@ -8,12 +8,15 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useVisita, type VisitaDetalle } from '@/lib/hooks/useVisita'
 import { useFormasPago } from '@/lib/hooks/useFormasPago'
+import { useIncidencias } from '@/lib/hooks/useIncidencias'
 import { VisitaInicioView } from '@/components/campo/VisitaInicioView'
 import { VisitaConteoView } from '@/components/campo/VisitaConteoView'
 import { VisitaCobroView, type CobroDraft } from '@/components/campo/VisitaCobroView'
 import { VisitaReposicionView, type ReposicionDraft } from '@/components/campo/VisitaReposicionView'
 import { VisitaFotosView, type FotoDraft } from '@/components/campo/VisitaFotosView'
 import { VisitaConfirmarView } from '@/components/campo/VisitaConfirmarView'
+import { VisitaIncidenciasButton } from '@/components/campo/VisitaIncidenciasButton'
+import { IncidenciaSheet } from '@/components/campo/IncidenciaSheet'
 
 type EtapaVisita = 'conteo' | 'cobro' | 'reposicion' | 'fotos' | 'confirmar_cierre'
 
@@ -132,12 +135,14 @@ function VisitaEnEjecucionFlow({
 }) {
   const router = useRouter()
   const { data: formasPago = [] } = useFormasPago({ soloActivas: true })
+  const { data: incidencias = [] } = useIncidencias({ visitaId: visita.id })
   const conteoGuardado = visita.items.some((item) => item.invActual !== null)
 
   const [etapa, setEtapa] = useState<EtapaVisita>(conteoGuardado ? 'cobro' : 'conteo')
   const [cobro, setCobro] = useState<CobroDraft | null>(null)
   const [reposiciones, setReposiciones] = useState<ReposicionDraft[] | null>(null)
   const [fotos, setFotos] = useState<FotoDraft[]>([])
+  const [incidenciaSheetOpen, setIncidenciaSheetOpen] = useState(false)
 
   const pasoActual = ETAPAS_POST_CONTEO.indexOf(etapa) + 1
   const formaPagoNombre = useMemo(
@@ -184,6 +189,7 @@ function VisitaEnEjecucionFlow({
   return (
     <div className="space-y-4">
       <Header pdvNombre={visita.pdvNombre} vitrinaCodigo={visita.vitrinaCodigo} onBack={handleBack} />
+      <VisitaIncidenciasButton count={incidencias.length} onClick={() => setIncidenciaSheetOpen(true)} />
 
       {etapa !== 'conteo' && (
         <div className="rounded-xl bg-slate-900 px-4 py-3 text-white">
@@ -276,6 +282,14 @@ function VisitaEnEjecucionFlow({
           onConfirmar={handleCerrarVisita}
         />
       )}
+
+      <IncidenciaSheet
+        open={incidenciaSheetOpen}
+        onOpenChange={setIncidenciaSheetOpen}
+        visitaId={visita.id}
+        pdvId={visita.pdvId}
+        vitrinaId={visita.vitrinaId}
+      />
     </div>
   )
 }

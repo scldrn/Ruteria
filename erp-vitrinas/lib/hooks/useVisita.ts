@@ -27,6 +27,8 @@ export type VisitaDetalle = {
   estado: 'planificada' | 'en_ejecucion' | 'completada' | 'no_realizada'
   fecha_hora_inicio: string | null
   colaboradoraId: string
+  pdvId: string
+  vitrinaId: string
   monto_calculado: number
   pdvNombre: string
   vitrinaCodigo: string
@@ -77,6 +79,7 @@ export function useVisita(id: string) {
           estado,
           fecha_hora_inicio,
           monto_calculado,
+          pdv_id,
           vitrina_id,
           colaboradora_id,
           puntos_de_venta(nombre_comercial),
@@ -151,6 +154,8 @@ export function useVisita(id: string) {
         estado: visita.estado as VisitaDetalle['estado'],
         fecha_hora_inicio: visita.fecha_hora_inicio ?? null,
         colaboradoraId,
+        pdvId: visita.pdv_id,
+        vitrinaId,
         monto_calculado: (visita.monto_calculado as number) ?? 0,
         pdvNombre: firstOrNull(pdvRaw)?.nombre_comercial ?? '',
         vitrinaCodigo: firstOrNull(vitrRaw)?.codigo ?? '',

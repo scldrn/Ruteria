@@ -8,6 +8,9 @@ import { DataTable, type Column } from '@/components/admin/DataTable'
 import { SearchInput } from '@/components/admin/SearchInput'
 import { InventarioCentralSheet } from '@/components/admin/InventarioCentralSheet'
 import { InventarioColaboradorasTab } from '@/components/admin/InventarioColaboradorasTab'
+import { BajaInventarioSheet } from '@/components/admin/BajaInventarioSheet'
+import { MovimientosInventarioTab } from '@/components/admin/MovimientosInventarioTab'
+import { InventarioValorizadoTab } from '@/components/admin/InventarioValorizadoTab'
 import { useInventarioCentral, type InventarioCentralItem } from '@/lib/hooks/useInventarioCentral'
 
 // Formateador de moneda COP
@@ -34,6 +37,7 @@ export default function InventarioCentralPage() {
   const [search, setSearch] = useState('')
   const [filterCategoria, setFilterCategoria] = useState('')
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [bajaSheetOpen, setBajaSheetOpen] = useState(false)
 
   // Filtrado por búsqueda de nombre/código y por categoría
   const filtered = useMemo(() => {
@@ -116,25 +120,33 @@ export default function InventarioCentralPage() {
         <div>
           <h1 className="text-2xl font-semibold text-slate-800">Inventario</h1>
           <p className="text-sm text-slate-500 mt-1">
-            {activeTab === 'central'
-              ? `${items.length} productos en bodega`
-              : 'Stock asignado a colaboradoras de campo'}
+            {activeTab === 'central' && `${items.length} productos en bodega`}
+            {activeTab === 'colaboradoras' && 'Stock asignado a colaboradoras de campo'}
+            {activeTab === 'movimientos' && 'Historial inmutable de movimientos por producto y ubicacion'}
+            {activeTab === 'valorizado' && 'Reporte consolidado del inventario a costo y a venta'}
           </p>
         </div>
-        {activeTab === 'central' && (
-          <Button
-            className="bg-[#6366f1] hover:bg-indigo-500"
-            onClick={() => setSheetOpen(true)}
-          >
-            <Plus size={16} className="mr-1.5" /> Registrar entrada
+        <div className="flex gap-2">
+          {activeTab === 'central' && (
+            <Button
+              className="bg-[#6366f1] hover:bg-indigo-500"
+              onClick={() => setSheetOpen(true)}
+            >
+              <Plus size={16} className="mr-1.5" /> Registrar entrada
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setBajaSheetOpen(true)}>
+            Registrar baja
           </Button>
-        )}
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="central">Central</TabsTrigger>
           <TabsTrigger value="colaboradoras">Colaboradoras</TabsTrigger>
+          <TabsTrigger value="movimientos">Movimientos</TabsTrigger>
+          <TabsTrigger value="valorizado">Valorizado</TabsTrigger>
         </TabsList>
 
         <TabsContent value="central">
@@ -170,9 +182,18 @@ export default function InventarioCentralPage() {
         <TabsContent value="colaboradoras">
           <InventarioColaboradorasTab />
         </TabsContent>
+
+        <TabsContent value="movimientos">
+          <MovimientosInventarioTab />
+        </TabsContent>
+
+        <TabsContent value="valorizado">
+          <InventarioValorizadoTab />
+        </TabsContent>
       </Tabs>
 
       <InventarioCentralSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+      <BajaInventarioSheet open={bajaSheetOpen} onOpenChange={setBajaSheetOpen} />
     </div>
   )
 }

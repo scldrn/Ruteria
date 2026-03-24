@@ -14,6 +14,7 @@ import {
   Map,
   ClipboardList,
   Settings2,
+  AlertTriangle,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { logoutAction } from '@/app/actions/auth'
@@ -23,7 +24,7 @@ interface NavItem {
   href: string
   icon: ElementType
   label: string
-  adminOnly?: boolean
+  roles?: UserRol[]
 }
 
 interface NavSection {
@@ -42,13 +43,14 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/admin/inventario', icon: Warehouse, label: 'Inventario' },
       { href: '/admin/rutas', icon: Map, label: 'Rutas' },
       { href: '/admin/visitas', icon: ClipboardList, label: 'Visitas' },
-      { href: '/admin/usuarios', icon: Users, label: 'Usuarios', adminOnly: true },
+      { href: '/admin/incidencias', icon: AlertTriangle, label: 'Incidencias', roles: ['admin', 'supervisor', 'analista'] },
+      { href: '/admin/usuarios', icon: Users, label: 'Usuarios', roles: ['admin'] },
     ],
   },
   {
     id: 'config',
     items: [
-      { href: '/admin/formas-pago', icon: Settings2, label: 'Formas de pago', adminOnly: true },
+      { href: '/admin/formas-pago', icon: Settings2, label: 'Formas de pago', roles: ['admin'] },
     ],
   },
 ]
@@ -64,7 +66,7 @@ export function AppSidebar({ rol }: AppSidebarProps) {
     <aside className="flex flex-col w-14 min-h-screen bg-[#1e293b] py-4 shrink-0">
       <nav className="flex flex-col items-center gap-3 flex-1">
         {NAV_SECTIONS.map((section, sectionIndex) => {
-          const items = section.items.filter((item) => !item.adminOnly || rol === 'admin')
+          const items = section.items.filter((item) => !item.roles || item.roles.includes(rol))
 
           if (items.length === 0) return null
 

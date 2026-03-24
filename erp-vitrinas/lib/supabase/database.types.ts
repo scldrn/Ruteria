@@ -336,6 +336,45 @@ export type Database = {
         }
         Relationships: []
       }
+      fotos_incidencia: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          incidencia_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incidencia_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incidencia_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotos_incidencia_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fotos_incidencia_incidencia_id_fkey"
+            columns: ["incidencia_id"]
+            isOneToOne: false
+            referencedRelation: "incidencias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fotos_visita: {
         Row: {
           fecha_subida: string
@@ -655,6 +694,7 @@ export type Database = {
           destino_tipo: string | null
           direccion: string
           id: string
+          motivo_baja: string | null
           notas: string | null
           origen_id: string | null
           origen_tipo: string | null
@@ -672,6 +712,7 @@ export type Database = {
           destino_tipo?: string | null
           direccion: string
           id?: string
+          motivo_baja?: string | null
           notas?: string | null
           origen_id?: string | null
           origen_tipo?: string | null
@@ -689,6 +730,7 @@ export type Database = {
           destino_tipo?: string | null
           direccion?: string
           id?: string
+          motivo_baja?: string | null
           notas?: string | null
           origen_id?: string | null
           origen_tipo?: string | null
@@ -1299,7 +1341,64 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      inventario_valorizado: {
+        Row: {
+          cantidad_actual: number | null
+          costo_unitario_ref: number | null
+          precio_venta_ref: number | null
+          producto_codigo: string | null
+          producto_id: string | null
+          producto_nombre: string | null
+          ubicacion_id: string | null
+          ubicacion_nombre: string | null
+          ubicacion_tipo: string | null
+          updated_at: string | null
+          valor_costo_total: number | null
+          valor_venta_total: number | null
+        }
+        Relationships: []
+      }
+      movimientos_inventario_detalle: {
+        Row: {
+          cantidad: number | null
+          costo_unitario: number | null
+          created_at: string | null
+          destino_id: string | null
+          destino_label: string | null
+          destino_tipo: string | null
+          direccion: string | null
+          id: string | null
+          motivo_baja: string | null
+          notas: string | null
+          origen_id: string | null
+          origen_label: string | null
+          origen_tipo: string | null
+          producto_codigo: string | null
+          producto_id: string | null
+          producto_nombre: string | null
+          referencia_id: string | null
+          referencia_tipo: string | null
+          tipo: string | null
+          usuario_id: string | null
+          usuario_nombre: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimientos_inventario_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "productos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimientos_inventario_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       calcular_monto_visita: { Args: { p_visita_id: string }; Returns: number }

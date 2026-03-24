@@ -80,6 +80,8 @@ export function useTransferirInventarioColaboradora() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: ['inventario_central'] })
+      queryClient.invalidateQueries({ queryKey: ['movimientos_inventario'] })
+      queryClient.invalidateQueries({ queryKey: ['inventario_valorizado'] })
     },
   })
 }

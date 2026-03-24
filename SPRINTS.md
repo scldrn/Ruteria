@@ -120,17 +120,17 @@ Decisiones técnicas:
 
 ### Sprint 5 — Inventario Avanzado + Incidencias
 **Objetivo:** Gestión completa de bajas de inventario e incidencias operativas.
-**Estado general:** `[ ]` pendiente
+**Estado general:** `[x]` completado (2026-03-23)
 **HUs:** HU-26, HU-27, HU-28, HU-29, HU-30, HU-31
 
 | # | Tarea | HU | Estado | Notas |
 |---|-------|----|--------|-------|
-| S5-01 | Baja de unidades por robo, pérdida o daño (movimiento inmutable con motivo) | HU-26 | `[ ]` | |
-| S5-02 | Historial de movimientos por producto o vitrina | HU-27 | `[ ]` | |
-| S5-03 | Reporte de inventario total valorizado | HU-28 | `[ ]` | |
-| S5-04 | Registro de incidencia durante visita (tipo, descripción, fotos opcionales) | HU-29 | `[ ]` | |
-| S5-05 | Ciclo de vida de incidencia: abierta → en_análisis → resuelta → cerrada (resolución obligatoria) | HU-30 | `[ ]` | |
-| S5-06 | Listado de incidencias abiertas con filtros por tipo, PDV, fecha y días abierta | HU-31 | `[ ]` | |
+| S5-01 | Baja de unidades por robo, pérdida o daño (movimiento inmutable con motivo) | HU-26 | `[x]` | `BajaInventarioSheet` + `motivo_baja` en `movimientos_inventario` |
+| S5-02 | Historial de movimientos por producto o vitrina | HU-27 | `[x]` | Tab `Movimientos` en `/admin/inventario` usando vista `movimientos_inventario_detalle` |
+| S5-03 | Reporte de inventario total valorizado | HU-28 | `[x]` | Tab `Valorizado` en `/admin/inventario` usando vista `inventario_valorizado` |
+| S5-04 | Registro de incidencia durante visita (tipo, descripción, fotos opcionales) | HU-29 | `[x]` | CTA `Reportar incidencia` en `/campo/visita/[id]` + `IncidenciaSheet` |
+| S5-05 | Ciclo de vida de incidencia: abierta → en_análisis → resuelta → cerrada (resolución obligatoria) | HU-30 | `[x]` | Trigger SQL + `IncidenciaDetalleSheet` |
+| S5-06 | Listado de incidencias abiertas con filtros por tipo, PDV, fecha y días abierta | HU-31 | `[x]` | `/admin/incidencias` |
 
 ---
 
@@ -201,6 +201,7 @@ Decisiones técnicas:
 | 2026-03-21 | Sprint 1 | Bug fix | Selects vacíos en PDV (zona_id, forma_pago_preferida) fallaban validación Zod. Añadido z.preprocess para convertir "" → undefined. |
 | 2026-03-22 | Sprint 2 | Completado | Módulos Vitrinas (listado + detalle tabs), Inventario Central y Rutas con DnD. Dependencias: @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities. |
 | 2026-03-23 | Sprint 4 | Completado | Flujo completo de cierre de visita: cobro, reposición, fotos opcionales y cierre transaccional vía RPC. Admin: formas de pago e inventario de colaboradoras. |
+| 2026-03-23 | Sprint 5 | Completado | Inventario avanzado: bajas, historial y valorizado. Incidencias: captura en campo, gestión admin y ciclo de vida validado en DB. |
 
 ---
 
@@ -257,3 +258,17 @@ Decisiones técnicas:
 **Bucket de fotos:** El nombre consistente del bucket en local y RLS es `fotos-visita`. Evitar variantes como `visitas-fotos` o `fotos-visitas` en código nuevo.
 
 **Regresión de Sprint 3:** Con Sprint 4, `guardarConteo` ya no redirige a ruta; ahora avanza a cobro dentro de `/campo/visita/[id]`. Los tests de Sprint 3 deben validar esa transición.
+
+### Decisiones Sprint 5 (relevantes para sprints futuros)
+
+**Inventario avanzado dentro del módulo existente:** HU-26/27/28 no abrieron un módulo nuevo. Todo quedó integrado en `/admin/inventario` con tabs `Central`, `Colaboradoras`, `Movimientos` y `Valorizado`.
+
+**Bajas auditadas:** Las bajas siguen usando `tipo = 'baja'` en `movimientos_inventario`; la causa estructurada se guarda en `motivo_baja` (`robo`, `perdida`, `dano`) y `notas` conserva el contexto libre.
+
+**Historial y valorización por vistas SQL:** Para evitar joins repetidos en cliente, Sprint 5 creó las vistas `movimientos_inventario_detalle` e `inventario_valorizado`. Los hooks consumen esas vistas como fuente principal.
+
+**Incidencias sin romper el stepper:** El registro de incidencias en campo se integró como acción secundaria en `/campo/visita/[id]`; no se añadió una nueva `EtapaVisita`, preservando el flujo estable de Sprint 4.
+
+**Fotos de incidencia:** Se reutiliza el bucket `fotos-visita` con paths `incidencias/{incidencia_id}/...`, y las referencias quedan en la tabla `fotos_incidencia`.
+
+**Workflow de incidencias protegido en DB:** La transición `abierta -> en_analisis -> resuelta -> cerrada` y la resolución obligatoria al resolver/cerrar se validan en PostgreSQL, no solo en cliente.

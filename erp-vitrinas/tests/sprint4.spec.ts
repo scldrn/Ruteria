@@ -15,6 +15,11 @@ let producto1Id: string
 let producto2Id: string
 
 async function loginAdmin(page: Page) {
+  await page.goto('/login')
+  await page.evaluate(() => {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
   await page.context().clearCookies()
   await page.goto('/login')
   await page.getByLabel(/correo/i).fill('admin@erp.local')
@@ -24,6 +29,11 @@ async function loginAdmin(page: Page) {
 }
 
 async function loginColaboradora(page: Page) {
+  await page.goto('/login')
+  await page.evaluate(() => {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
   await page.context().clearCookies()
   await page.goto('/login')
   await page.getByLabel(/correo/i).fill('colaboradora@erp.local')
@@ -41,7 +51,8 @@ async function resetInventariosBase() {
   await adminSupabase
     .from('movimientos_inventario')
     .delete()
-    .in('referencia_tipo', ['visita', 'transferencia_colaboradora'])
+    .eq('referencia_tipo', 'transferencia_colaboradora')
+    .eq('destino_id', colaboradoraId)
 
   await adminSupabase
     .from('inventario_central')
@@ -83,38 +94,29 @@ async function seedInventarioColaboradora(rows: Array<{ producto_id: string; can
 async function createVisita(estado: 'planificada' | 'en_ejecucion' = 'planificada') {
   const hoy = getBusinessDate()
   const { start, end } = getBusinessDayUtcRange(hoy)
+  const { data: visitasHoy } = await adminSupabase
+    .from('visitas')
+    .select('id')
+    .eq('pdv_id', pdvId)
+    .eq('colaboradora_id', colaboradoraId)
+    .gte('created_at', start)
+    .lt('created_at', end)
+
+  const visitaIds = visitasHoy?.map((row) => row.id) ?? []
+
+  if (visitaIds.length > 0) {
+    await adminSupabase.from('movimientos_inventario').delete().in('referencia_id', visitaIds)
+  }
 
   await adminSupabase
     .from('cobros')
     .delete()
-    .in(
-      'visita_id',
-      (
-        await adminSupabase
-          .from('visitas')
-          .select('id')
-          .eq('pdv_id', pdvId)
-          .eq('colaboradora_id', colaboradoraId)
-          .gte('created_at', start)
-          .lt('created_at', end)
-      ).data?.map((row) => row.id) ?? []
-    )
+    .in('visita_id', visitaIds)
 
   await adminSupabase
     .from('detalle_visita')
     .delete()
-    .in(
-      'visita_id',
-      (
-        await adminSupabase
-          .from('visitas')
-          .select('id')
-          .eq('pdv_id', pdvId)
-          .eq('colaboradora_id', colaboradoraId)
-          .gte('created_at', start)
-          .lt('created_at', end)
-      ).data?.map((row) => row.id) ?? []
-    )
+    .in('visita_id', visitaIds)
 
   await adminSupabase
     .from('visitas')
