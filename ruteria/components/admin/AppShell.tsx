@@ -24,7 +24,7 @@ export function AppShell({ children, user }: AppShellProps) {
         <div className="flex flex-col flex-1 min-w-0">
           {/* Navbar superior */}
           <header className="h-12 bg-[#1e293b] flex items-center justify-between px-4 shrink-0">
-            <span className="text-xs font-bold text-slate-100 tracking-widest">POWERP</span>
+            <span className="text-xs font-bold text-slate-100 tracking-widest">RUTERIA</span>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400">{displayName}</span>
               <div className="w-7 h-7 rounded-full bg-[#6366f1] flex items-center justify-center text-white text-xs font-semibold">

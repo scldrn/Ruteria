@@ -50,8 +50,8 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-[#1e293b] rounded-xl p-8 shadow-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-xl font-bold text-slate-100 tracking-widest">POWERP</h1>
-          <p className="text-xs text-slate-500 mt-1">Gestión de Vitrinas</p>
+          <h1 className="text-xl font-bold text-slate-100 tracking-widest">RUTERIA</h1>
+          <p className="text-xs text-slate-500 mt-1">Gestión de rutas y campo</p>
         </div>
 
         <form
