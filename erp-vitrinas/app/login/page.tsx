@@ -1,19 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getHomeForRole } from '@/lib/auth/getHomeForRole'
 import { Button } from '@/components/ui/button'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [ready, setReady] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  useEffect(() => {
+    setReady(true)
+  }, [])
+
+  async function handleSubmit() {
     setLoading(true)
     setError(null)
 
@@ -33,7 +38,7 @@ export default function LoginPage() {
         return
       }
 
-      router.push(rol === 'colaboradora' ? '/campo/ruta-del-dia' : '/admin/dashboard')
+      router.push(getHomeForRole(rol))
     } catch {
       setError('No se pudo iniciar sesión. Verifica tu conexión e inténtalo de nuevo.')
     } finally {
@@ -49,7 +54,13 @@ export default function LoginPage() {
           <p className="text-xs text-slate-500 mt-1">Gestión de Vitrinas</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleSubmit()
+          }}
+          className="space-y-4"
+        >
           <div>
             <label htmlFor="email" className="block text-xs text-slate-400 mb-1.5">
               Correo electrónico
@@ -87,11 +98,12 @@ export default function LoginPage() {
           )}
 
           <Button
-            type="submit"
-            disabled={loading}
+            type="button"
+            disabled={loading || !ready}
+            onClick={() => void handleSubmit()}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium mt-2"
           >
-            {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+            {loading ? 'Iniciando sesión...' : !ready ? 'Preparando...' : 'Iniciar sesión'}
           </Button>
         </form>
       </div>

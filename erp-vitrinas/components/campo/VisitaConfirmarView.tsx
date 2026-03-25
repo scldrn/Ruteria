@@ -64,6 +64,7 @@ export function VisitaConfirmarView({
       <div className="rounded-xl border border-slate-200 p-4 space-y-2">
         <p className="text-sm font-medium text-slate-800">Fotos</p>
         <p className="text-sm text-slate-500">{fotos.length} foto(s) cargadas</p>
+        <p className="text-xs text-slate-400">La visita solo se completa si queda al menos una foto final registrada.</p>
       </div>
 
       <Button className="w-full" onClick={onConfirmar} disabled={isPending}>

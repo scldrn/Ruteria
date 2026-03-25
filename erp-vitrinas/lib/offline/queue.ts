@@ -95,6 +95,24 @@ export type OfflineQueueItem =
       createdAt: string
       updatedAt: string
     }
+  | {
+      id: string
+      type: 'visit:create-garantia'
+      visitId: string
+      payload: {
+        garantia_id: string
+        pdv_id: string
+        vitrina_id: string
+        producto_id: string
+        cantidad: number
+        motivo: string
+        fecha_venta_aprox: string | null
+      }
+      attemptCount: number
+      lastError: string | null
+      createdAt: string
+      updatedAt: string
+    }
 
 export function buildQueueItemId(
   type: OfflineQueueItem['type'],
@@ -231,6 +249,26 @@ export async function enqueueCreateIncidencia(
   }
 ): Promise<void> {
   const base = baseQueueMeta('visit:create-incidencia', visitId, payload.incidencia_id)
+
+  await putQueueItem({
+    ...base,
+    payload,
+  })
+}
+
+export async function enqueueCreateGarantia(
+  visitId: string,
+  payload: {
+    garantia_id: string
+    pdv_id: string
+    vitrina_id: string
+    producto_id: string
+    cantidad: number
+    motivo: string
+    fecha_venta_aprox: string | null
+  }
+): Promise<void> {
+  const base = baseQueueMeta('visit:create-garantia', visitId, payload.garantia_id)
 
   await putQueueItem({
     ...base,

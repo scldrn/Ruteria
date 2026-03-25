@@ -15,6 +15,10 @@ import {
   ClipboardList,
   Settings2,
   AlertTriangle,
+  ShieldAlert,
+  Building2,
+  ShoppingCart,
+  FileBarChart2,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { logoutAction } from '@/app/actions/auth'
@@ -36,7 +40,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     id: 'core',
     items: [
-      { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'supervisor', 'analista'] },
+      { href: '/admin/reportes', icon: FileBarChart2, label: 'Reportes', roles: ['admin', 'supervisor', 'analista', 'compras'] },
       { href: '/admin/productos', icon: Package, label: 'Productos' },
       { href: '/admin/puntos-de-venta', icon: Store, label: 'Puntos de Venta' },
       { href: '/admin/vitrinas', icon: Monitor, label: 'Vitrinas' },
@@ -44,6 +49,9 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/admin/rutas', icon: Map, label: 'Rutas' },
       { href: '/admin/visitas', icon: ClipboardList, label: 'Visitas' },
       { href: '/admin/incidencias', icon: AlertTriangle, label: 'Incidencias', roles: ['admin', 'supervisor', 'analista'] },
+      { href: '/admin/garantias', icon: ShieldAlert, label: 'Garantías', roles: ['admin', 'supervisor', 'analista', 'compras'] },
+      { href: '/admin/proveedores', icon: Building2, label: 'Proveedores', roles: ['admin', 'supervisor', 'analista', 'compras'] },
+      { href: '/admin/compras', icon: ShoppingCart, label: 'Compras', roles: ['admin', 'supervisor', 'analista', 'compras'] },
       { href: '/admin/usuarios', icon: Users, label: 'Usuarios', roles: ['admin'] },
     ],
   },

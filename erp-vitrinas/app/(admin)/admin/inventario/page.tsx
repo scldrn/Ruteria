@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus } from 'lucide-react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DataTable, type Column } from '@/components/admin/DataTable'
 import { SearchInput } from '@/components/admin/SearchInput'
-import { InventarioCentralSheet } from '@/components/admin/InventarioCentralSheet'
 import { InventarioColaboradorasTab } from '@/components/admin/InventarioColaboradorasTab'
 import { BajaInventarioSheet } from '@/components/admin/BajaInventarioSheet'
 import { MovimientosInventarioTab } from '@/components/admin/MovimientosInventarioTab'
@@ -36,7 +35,6 @@ export default function InventarioCentralPage() {
   const [activeTab, setActiveTab] = useState('central')
   const [search, setSearch] = useState('')
   const [filterCategoria, setFilterCategoria] = useState('')
-  const [sheetOpen, setSheetOpen] = useState(false)
   const [bajaSheetOpen, setBajaSheetOpen] = useState(false)
 
   // Filtrado por búsqueda de nombre/código y por categoría
@@ -127,14 +125,6 @@ export default function InventarioCentralPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          {activeTab === 'central' && (
-            <Button
-              className="bg-[#6366f1] hover:bg-indigo-500"
-              onClick={() => setSheetOpen(true)}
-            >
-              <Plus size={16} className="mr-1.5" /> Registrar entrada
-            </Button>
-          )}
           <Button variant="outline" onClick={() => setBajaSheetOpen(true)}>
             Registrar baja
           </Button>
@@ -150,6 +140,16 @@ export default function InventarioCentralPage() {
         </TabsList>
 
         <TabsContent value="central">
+          <div className="mb-4 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+            <p className="text-sm font-medium text-indigo-950">Entradas centralizadas por compras</p>
+            <p className="mt-1 text-sm text-indigo-800">
+              Las nuevas entradas al inventario central ahora se registran al recibir una orden de compra.
+            </p>
+            <Button asChild variant="link" className="mt-2 h-auto p-0 text-indigo-900">
+              <Link href="/admin/compras">Registrar entrada vía Compras →</Link>
+            </Button>
+          </div>
+
           <div className="flex gap-3 mb-4">
             <SearchInput
               value={search}
@@ -192,7 +192,6 @@ export default function InventarioCentralPage() {
         </TabsContent>
       </Tabs>
 
-      <InventarioCentralSheet open={sheetOpen} onOpenChange={setSheetOpen} />
       <BajaInventarioSheet open={bajaSheetOpen} onOpenChange={setBajaSheetOpen} />
     </div>
   )

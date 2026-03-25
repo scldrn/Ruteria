@@ -63,6 +63,15 @@ BEGIN
     RAISE EXCEPTION 'No se ha guardado el conteo de la visita';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM fotos_visita
+    WHERE visita_id = p_visita_id
+      AND COALESCE(tipo, 'despues') = 'despues'
+  ) THEN
+    RAISE EXCEPTION 'Debes registrar al menos una foto final de la vitrina antes de cerrar la visita';
+  END IF;
+
   v_monto_calculado := calcular_monto_visita(p_visita_id);
   v_monto_cobrado := (p_cobro->>'monto')::DECIMAL(12,2);
   v_forma_pago_id := (p_cobro->>'forma_pago_id')::UUID;

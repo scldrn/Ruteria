@@ -130,7 +130,7 @@ test.describe('Sprint 3 — Campo', () => {
     await page.goto('/login')
     await page.getByLabel(/correo/i).fill('colaboradora@erp.local')
     await page.getByLabel(/contraseña/i).fill('Colab1234!')
-    await page.click('button[type="submit"]')
+    await page.getByRole('button', { name: /iniciar sesión/i }).click()
     await page.waitForURL('/campo/ruta-del-dia')
   }
 
@@ -215,7 +215,7 @@ test.describe('Sprint 3 — Admin', () => {
     await page.goto('/login')
     await page.getByLabel(/correo/i).fill('admin@erp.local')
     await page.getByLabel(/contraseña/i).fill('Admin1234!')
-    await page.click('button[type="submit"]')
+    await page.getByRole('button', { name: /iniciar sesión/i }).click()
     await page.waitForURL('/admin/dashboard')
   })
 

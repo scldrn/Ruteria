@@ -28,6 +28,9 @@ function createSupabaseStub(handlers?: {
   rpcCerrarVisita?: (
     args: Record<string, unknown>
   ) => Promise<{ error: { message: string } | null }>
+  rpcRegistrarGarantia?: (
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>
 }) {
   return {
     from(table: string) {
@@ -54,11 +57,19 @@ function createSupabaseStub(handlers?: {
       throw new Error(`Tabla no soportada en test: ${table}`)
     },
     async rpc(fn: string, args: Record<string, unknown>) {
-      if (fn !== 'cerrar_visita_offline') {
+      if (fn === 'cerrar_visita_offline') {
+        return (await handlers?.rpcCerrarVisita?.(args)) ?? { error: null }
+      }
+
+      if (fn === 'registrar_garantia') {
+        return (await handlers?.rpcRegistrarGarantia?.(args)) ?? { error: null }
+      }
+
+      if (fn !== 'cerrar_visita_offline' && fn !== 'registrar_garantia') {
         throw new Error(`RPC no soportado en test: ${fn}`)
       }
 
-      return (await handlers?.rpcCerrarVisita?.(args)) ?? { error: null }
+      return { error: null }
     },
   } as unknown as SupabaseClient<Database>
 }
@@ -135,16 +146,32 @@ function buildQueueItem(type: OfflineQueueItem['type']): OfflineQueueItem {
     }
   }
 
+  if (type === 'visit:create-incidencia') {
+    return {
+      ...base,
+      type,
+      payload: {
+        incidencia_id: 'inc-1',
+        pdv_id: 'pdv-1',
+        vitrina_id: 'vitrina-1',
+        tipo: 'robo',
+        descripcion: 'Incidencia pendiente',
+        photo_ids: ['photo-1'],
+      },
+    }
+  }
+
   return {
     ...base,
     type,
     payload: {
-      incidencia_id: 'inc-1',
+      garantia_id: 'gar-1',
       pdv_id: 'pdv-1',
       vitrina_id: 'vitrina-1',
-      tipo: 'robo',
-      descripcion: 'Incidencia pendiente',
-      photo_ids: ['photo-1'],
+      producto_id: 'prod-1',
+      cantidad: 1,
+      motivo: 'Defecto de fabrica',
+      fecha_venta_aprox: null,
     },
   }
 }
@@ -170,7 +197,7 @@ describe('processOfflineSyncQueue', () => {
     expect(queueMock.markQueueItemError).not.toHaveBeenCalled()
     expect(draftsMock.deleteVisitDraft).toHaveBeenCalledWith(queueItem.visitId)
     expect(draftsMock.markVisitDraftError).not.toHaveBeenCalled()
-    expect(invalidateQueries).toHaveBeenCalledTimes(6)
+    expect(invalidateQueries).toHaveBeenCalledTimes(7)
   })
 
   it('marca error en cola y draft cuando la sincronizacion falla', async () => {

@@ -206,6 +206,20 @@ export async function processOfflineSyncQueue(
         await deletePendingIncidencia(incidencia.id)
       }
 
+      if (item.type === 'visit:create-garantia') {
+        const { error } = await supabase.rpc('registrar_garantia', {
+          p_garantia_id: item.payload.garantia_id,
+          p_visita_recepcion_id: item.visitId,
+          p_pdv_id: item.payload.pdv_id,
+          p_producto_id: item.payload.producto_id,
+          p_cantidad: item.payload.cantidad,
+          p_motivo: item.payload.motivo,
+          p_fecha_venta_aprox: item.payload.fecha_venta_aprox ?? undefined,
+        })
+
+        if (error) throw new Error(error.message)
+      }
+
       await deleteQueueItem(item.id)
 
       const stillPending = await hasPendingQueueItemsForVisit(item.visitId)
@@ -236,6 +250,7 @@ export async function processOfflineSyncQueue(
     queryClient.invalidateQueries({ queryKey: ['visita'] }),
     queryClient.invalidateQueries({ queryKey: ['visitas'] }),
     queryClient.invalidateQueries({ queryKey: ['incidencias'] }),
+    queryClient.invalidateQueries({ queryKey: ['garantias'] }),
     queryClient.invalidateQueries({ queryKey: ['inventario_colaboradora'] }),
     queryClient.invalidateQueries({ queryKey: ['inventario_central'] }),
   ])

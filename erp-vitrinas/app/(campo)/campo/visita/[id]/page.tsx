@@ -16,12 +16,22 @@ import { VisitaReposicionView, type ReposicionDraft } from '@/components/campo/V
 import { VisitaFotosView, type FotoDraft } from '@/components/campo/VisitaFotosView'
 import { VisitaConfirmarView } from '@/components/campo/VisitaConfirmarView'
 import { VisitaIncidenciasButton } from '@/components/campo/VisitaIncidenciasButton'
+import { VisitaGarantiasButton } from '@/components/campo/VisitaGarantiasButton'
 import { IncidenciaSheet } from '@/components/campo/IncidenciaSheet'
 import { ConnectionStatusBar } from '@/components/campo/ConnectionStatusBar'
 
 type EtapaVisita = 'conteo' | 'cobro' | 'reposicion' | 'fotos' | 'confirmar_cierre'
 
 const ETAPAS_POST_CONTEO: EtapaVisita[] = ['cobro', 'reposicion', 'fotos', 'confirmar_cierre']
+
+function mapFotosToDrafts(fotos: VisitaDetalle['fotos']): FotoDraft[] {
+  return fotos.map((foto) => ({
+    id: foto.id,
+    fotoId: foto.id,
+    storagePath: foto.url,
+    previewUrl: null,
+  }))
+}
 
 interface Props {
   params: Promise<{ id: string }>
@@ -147,7 +157,7 @@ function VisitaEnEjecucionFlow({
   const [etapa, setEtapa] = useState<EtapaVisita>(conteoGuardado ? 'cobro' : 'conteo')
   const [cobro, setCobro] = useState<CobroDraft | null>(null)
   const [reposiciones, setReposiciones] = useState<ReposicionDraft[] | null>(null)
-  const [fotos, setFotos] = useState<FotoDraft[]>([])
+  const [fotos, setFotos] = useState<FotoDraft[]>(() => mapFotosToDrafts(visita.fotos))
   const [incidenciaSheetOpen, setIncidenciaSheetOpen] = useState(false)
 
   const pasoActual = ETAPAS_POST_CONTEO.indexOf(etapa) + 1
@@ -177,6 +187,12 @@ function VisitaEnEjecucionFlow({
       return
     }
 
+    if (fotos.length === 0) {
+      toast.error('Debes registrar al menos una foto final antes de cerrar la visita')
+      setEtapa('fotos')
+      return
+    }
+
     try {
       await cerrarVisita.mutateAsync({
         cobro,
@@ -195,7 +211,10 @@ function VisitaEnEjecucionFlow({
   return (
     <div className="space-y-4">
       <Header pdvNombre={visita.pdvNombre} vitrinaCodigo={visita.vitrinaCodigo} onBack={handleBack} />
-      <VisitaIncidenciasButton count={incidencias.length} onClick={() => setIncidenciaSheetOpen(true)} />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <VisitaGarantiasButton visitaId={visita.id} pdvId={visita.pdvId} vitrinaId={visita.vitrinaId} />
+        <VisitaIncidenciasButton count={incidencias.length} onClick={() => setIncidenciaSheetOpen(true)} />
+      </div>
 
       {etapa !== 'conteo' && (
         <div className="rounded-xl bg-slate-900 px-4 py-3 text-white">
@@ -272,6 +291,10 @@ function VisitaEnEjecucionFlow({
             await eliminarFoto.mutateAsync({ fotoId, path })
           }}
           onContinuar={(value) => {
+            if (value.length === 0) {
+              toast.error('Debes registrar al menos una foto final para continuar')
+              return
+            }
             setFotos(value)
             setEtapa('confirmar_cierre')
           }}

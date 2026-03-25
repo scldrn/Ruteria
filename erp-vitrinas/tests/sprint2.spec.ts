@@ -6,7 +6,7 @@ test.describe('Sprint 2', () => {
     await page.goto('/login')
     await page.getByLabel(/correo/i).fill('admin@erp.local')
     await page.getByLabel(/contraseña/i).fill('Admin1234!')
-    await page.click('button[type="submit"]')
+    await page.getByRole('button', { name: /iniciar sesión/i }).click()
     await page.waitForURL('/admin/dashboard')
   })
 
@@ -44,11 +44,11 @@ test.describe('Sprint 2', () => {
     await expect(page.getByRole('heading', { name: 'Nueva vitrina' })).toBeVisible()
   })
 
-  // S2-05: Open entrada sheet
-  test('abre sheet de registrar entrada en inventario central', async ({ page }) => {
+  // S2-05: Inventario central ahora redirige a compras para entradas
+  test('inventario central informa que las entradas se registran desde compras', async ({ page }) => {
     await page.goto('/admin/inventario')
-    await page.getByRole('button', { name: 'Registrar entrada' }).click()
-    await expect(page.getByRole('heading', { name: 'Registrar entrada por compra' })).toBeVisible()
+    await expect(page.getByText(/entradas centralizadas por compras/i)).toBeVisible()
+    await expect(page.getByRole('link', { name: /registrar entrada vía compras/i })).toBeVisible()
   })
 
   // S2-06: Create ruta

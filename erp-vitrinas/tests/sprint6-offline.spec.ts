@@ -28,7 +28,7 @@ async function loginColaboradora(page: Page) {
   await page.goto('/login')
   await page.getByLabel(/correo/i).fill('colaboradora@erp.local')
   await page.getByLabel(/contraseña/i).fill('Colab1234!')
-  await page.click('button[type="submit"]')
+  await page.getByRole('button', { name: /iniciar sesión/i }).click()
   await page.waitForURL('/campo/ruta-del-dia')
 }
 
@@ -207,7 +207,7 @@ test('iniciar visita sin requests disponibles crea draft local y sincroniza al r
     .toBe('en_ejecucion:started')
 
   await expect(page.getByText('Pendiente sync')).not.toBeVisible()
-  await expect(page.getByRole('button', { name: /continuar/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /continuar/i }).first()).toBeVisible()
 })
 
 test('marcar no realizada sin requests disponibles crea draft local y sincroniza al recuperar conexion', async ({ page }) => {
@@ -362,17 +362,24 @@ test('cerrar visita sin requests disponibles crea cierre pendiente y sincroniza 
   await page.getByRole('button', { name: /continuar a reposicion/i }).click()
   await expect(page.getByRole('button', { name: /continuar a fotos/i })).toBeVisible()
   await page.getByRole('button', { name: /continuar a fotos/i }).click()
-  await page.getByRole('button', { name: /saltar fotos/i }).click()
 
   await page.route('**/rest/v1/**', async (route) => {
     await route.abort('failed')
   })
 
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'foto-cierre-offline.png',
+    mimeType: 'image/png',
+    buffer: SAMPLE_PNG,
+  })
+  await expect(page.getByText(/foto guardada en este dispositivo/i)).toBeVisible()
+  await page.getByRole('button', { name: /continuar a confirmar/i }).click()
+
   await page.getByRole('button', { name: /cerrar visita/i }).click()
   await page.waitForURL('/campo/ruta-del-dia')
 
   await expect(page.getByText('Pendiente sync')).toBeVisible()
-  await expect(page.getByText('Completada', { exact: true })).toBeVisible()
+  await expect(page.getByText('Completada', { exact: true }).first()).toBeVisible()
 
   await page.unroute('**/rest/v1/**')
   await page.reload()

@@ -373,6 +373,13 @@ export type Database = {
             referencedRelation: "incidencias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fotos_incidencia_incidencia_id_fkey"
+            columns: ["incidencia_id"]
+            isOneToOne: false
+            referencedRelation: "v_incidencias_abiertas_recientes"
+            referencedColumns: ["incidencia_id"]
+          },
         ]
       }
       fotos_visita: {
@@ -416,6 +423,7 @@ export type Database = {
           fecha_venta_aprox: string | null
           id: string
           motivo: string | null
+          notas_resolucion: string | null
           pdv_id: string
           producto_id: string
           resolucion: string | null
@@ -431,6 +439,7 @@ export type Database = {
           fecha_venta_aprox?: string | null
           id?: string
           motivo?: string | null
+          notas_resolucion?: string | null
           pdv_id: string
           producto_id: string
           resolucion?: string | null
@@ -446,6 +455,7 @@ export type Database = {
           fecha_venta_aprox?: string | null
           id?: string
           motivo?: string | null
+          notas_resolucion?: string | null
           pdv_id?: string
           producto_id?: string
           resolucion?: string | null
@@ -573,6 +583,13 @@ export type Database = {
             foreignKeyName: "incidencias_vitrina_id_fkey"
             columns: ["vitrina_id"]
             isOneToOne: false
+            referencedRelation: "v_top_vitrinas_mes"
+            referencedColumns: ["vitrina_id"]
+          },
+          {
+            foreignKeyName: "incidencias_vitrina_id_fkey"
+            columns: ["vitrina_id"]
+            isOneToOne: false
             referencedRelation: "vitrinas"
             referencedColumns: ["id"]
           },
@@ -675,6 +692,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "productos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_vitrina_vitrina_id_fkey"
+            columns: ["vitrina_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_vitrinas_mes"
+            referencedColumns: ["vitrina_id"]
           },
           {
             foreignKeyName: "inventario_vitrina_vitrina_id_fkey"
@@ -1105,6 +1129,13 @@ export type Database = {
             foreignKeyName: "surtido_estandar_vitrina_id_fkey"
             columns: ["vitrina_id"]
             isOneToOne: false
+            referencedRelation: "v_top_vitrinas_mes"
+            referencedColumns: ["vitrina_id"]
+          },
+          {
+            foreignKeyName: "surtido_estandar_vitrina_id_fkey"
+            columns: ["vitrina_id"]
+            isOneToOne: false
             referencedRelation: "vitrinas"
             referencedColumns: ["id"]
           },
@@ -1281,6 +1312,13 @@ export type Database = {
             foreignKeyName: "visitas_vitrina_id_fkey"
             columns: ["vitrina_id"]
             isOneToOne: false
+            referencedRelation: "v_top_vitrinas_mes"
+            referencedColumns: ["vitrina_id"]
+          },
+          {
+            foreignKeyName: "visitas_vitrina_id_fkey"
+            columns: ["vitrina_id"]
+            isOneToOne: false
             referencedRelation: "vitrinas"
             referencedColumns: ["id"]
           },
@@ -1441,8 +1479,86 @@ export type Database = {
           },
         ]
       }
+      v_dashboard_hoy: {
+        Row: {
+          cobros_mes: number | null
+          incidencias_abiertas: number | null
+          ventas_hoy: number | null
+          visitas_planificadas: number | null
+          visitas_realizadas: number | null
+        }
+        Relationships: []
+      }
+      v_incidencias_abiertas_recientes: {
+        Row: {
+          dias_abierta: number | null
+          fecha_apertura: string | null
+          incidencia_id: string | null
+          pdv_nombre: string | null
+          tipo: string | null
+        }
+        Relationships: []
+      }
+      v_stock_bajo: {
+        Row: {
+          cantidad_objetivo: number | null
+          pct_stock: number | null
+          pdv_nombre: string | null
+          producto_id: string | null
+          producto_nombre: string | null
+          stock_actual: number | null
+          vitrina_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_vitrina_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "productos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_vitrina_vitrina_id_fkey"
+            columns: ["vitrina_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_vitrinas_mes"
+            referencedColumns: ["vitrina_id"]
+          },
+          {
+            foreignKeyName: "inventario_vitrina_vitrina_id_fkey"
+            columns: ["vitrina_id"]
+            isOneToOne: false
+            referencedRelation: "vitrinas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_top_vitrinas_mes: {
+        Row: {
+          pdv_nombre: string | null
+          total_ventas: number | null
+          vitrina_id: string | null
+        }
+        Relationships: []
+      }
+      v_ventas_30_dias: {
+        Row: {
+          fecha: string | null
+          total_ventas: number | null
+        }
+        Relationships: []
+      }
+      v_ventas_por_ruta_mes: {
+        Row: {
+          colaboradora: string | null
+          ruta: string | null
+          total_ventas: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      assert_reportes_analiticos_access: { Args: never; Returns: undefined }
       calcular_monto_visita: { Args: { p_visita_id: string }; Returns: number }
       cerrar_visita: {
         Args: { p_cobro: Json; p_reposiciones?: Json; p_visita_id: string }
@@ -1473,6 +1589,88 @@ export type Database = {
         }[]
       }
       get_my_rol: { Args: never; Returns: string }
+      get_ranking_vitrinas: {
+        Args: {
+          p_desde_actual: string
+          p_desde_anterior: string
+          p_hasta_actual: string
+          p_hasta_anterior: string
+        }
+        Returns: {
+          pdv_nombre: string
+          variacion_pct: number
+          ventas_actual: number
+          ventas_anterior: number
+          vitrina_id: string
+        }[]
+      }
+      get_reporte_incidencias_garantias: {
+        Args: {
+          p_desde: string
+          p_hasta: string
+          p_pdv_id?: string
+          p_tipo?: string
+        }
+        Returns: {
+          descripcion_o_motivo: string
+          dias_abierta: number
+          estado: string
+          fecha_apertura: string
+          fecha_cierre: string
+          pdv_nombre: string
+          tipo_registro: string
+        }[]
+      }
+      get_reporte_ventas: {
+        Args: {
+          p_colaboradora_id?: string
+          p_desde: string
+          p_hasta: string
+          p_pdv_id?: string
+          p_producto_id?: string
+          p_ruta_id?: string
+        }
+        Returns: {
+          colaboradora_nombre: string
+          fecha: string
+          forma_pago: string
+          monto_cobrado: number
+          pdv_nombre: string
+          ruta_nombre: string
+          unidades_vendidas: number
+        }[]
+      }
+      get_reporte_visitas: {
+        Args: { p_desde: string; p_hasta: string; p_ruta_id?: string }
+        Returns: {
+          colaboradora_nombre: string
+          estado: string
+          fecha_planificada: string
+          motivo_no_realizada: string
+          pdv_nombre: string
+          ruta_nombre: string
+        }[]
+      }
+      recibir_compra: {
+        Args: { p_compra_id: string; p_items: Json }
+        Returns: undefined
+      }
+      registrar_garantia: {
+        Args: {
+          p_cantidad: number
+          p_fecha_venta_aprox?: string
+          p_garantia_id: string
+          p_motivo: string
+          p_pdv_id: string
+          p_producto_id: string
+          p_visita_recepcion_id: string
+        }
+        Returns: string
+      }
+      resolver_garantia: {
+        Args: { p_garantia_id: string; p_notas?: string; p_resolucion: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

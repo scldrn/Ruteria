@@ -9,7 +9,7 @@ export type FotoDraft = {
   id: string
   fotoId: string
   storagePath: string
-  previewUrl: string
+  previewUrl: string | null
 }
 
 interface Props {
@@ -51,7 +51,7 @@ export function VisitaFotosView({
           },
         ])
       } catch (error) {
-        URL.revokeObjectURL(previewUrl)
+      URL.revokeObjectURL(previewUrl)
         toast.error(error instanceof Error ? error.message : 'No se pudo subir la foto')
       }
     }
@@ -64,7 +64,9 @@ export function VisitaFotosView({
   async function handleRemove(foto: FotoDraft) {
     try {
       await onEliminarFoto(foto.fotoId, foto.storagePath)
-      URL.revokeObjectURL(foto.previewUrl)
+      if (foto.previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(foto.previewUrl)
+      }
       setFotos((current) => current.filter((item) => item.id !== foto.id))
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo eliminar la foto')
@@ -80,7 +82,7 @@ export function VisitaFotosView({
           </div>
           <div>
             <p className="font-medium text-slate-800">Toma una foto de como quedo la vitrina</p>
-            <p className="text-sm text-slate-500">Las fotos son opcionales, pero ayudan a validar el estado final.</p>
+            <p className="text-sm text-slate-500">Se requiere al menos una foto final para completar la visita.</p>
           </div>
         </div>
 
@@ -99,8 +101,16 @@ export function VisitaFotosView({
         <div className="grid grid-cols-2 gap-3">
           {fotos.map((foto) => (
             <div key={foto.id} className="relative rounded-xl overflow-hidden border border-slate-200">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={foto.previewUrl} alt="Vista previa de la vitrina" className="h-36 w-full object-cover" />
+              {foto.previewUrl ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={foto.previewUrl} alt="Vista previa de la vitrina" className="h-36 w-full object-cover" />
+                </>
+              ) : (
+                <div className="flex h-36 items-center justify-center bg-slate-100 px-4 text-center text-sm text-slate-500">
+                  Foto ya registrada en la visita
+                </div>
+              )}
               <button
                 type="button"
                 className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 text-slate-700 shadow"
@@ -114,14 +124,9 @@ export function VisitaFotosView({
         </div>
       )}
 
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={() => onContinuar(fotos)}>
-          Saltar fotos
-        </Button>
-        <Button className="flex-1" onClick={() => onContinuar(fotos)} disabled={isUploading}>
-          {isUploading ? 'Subiendo...' : 'Continuar a confirmar'}
-        </Button>
-      </div>
+      <Button className="w-full" onClick={() => onContinuar(fotos)} disabled={isUploading || fotos.length === 0}>
+        {isUploading ? 'Subiendo...' : 'Continuar a confirmar'}
+      </Button>
     </div>
   )
 }

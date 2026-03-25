@@ -7,6 +7,11 @@ const adminSupabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const SAMPLE_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wn6zkQAAAAASUVORK5CYII=',
+  'base64'
+)
+
 let colaboradoraId: string
 let pdvId: string
 let vitrinaId: string
@@ -24,7 +29,7 @@ async function loginAdmin(page: Page) {
   await page.goto('/login')
   await page.getByLabel(/correo/i).fill('admin@erp.local')
   await page.getByLabel(/contraseña/i).fill('Admin1234!')
-  await page.click('button[type="submit"]')
+  await page.getByRole('button', { name: /iniciar sesión/i }).click()
   await page.waitForURL('/admin/dashboard')
 }
 
@@ -38,7 +43,7 @@ async function loginColaboradora(page: Page) {
   await page.goto('/login')
   await page.getByLabel(/correo/i).fill('colaboradora@erp.local')
   await page.getByLabel(/contraseña/i).fill('Colab1234!')
-  await page.click('button[type="submit"]')
+  await page.getByRole('button', { name: /iniciar sesión/i }).click()
   await page.waitForURL('/campo/ruta-del-dia')
 }
 
@@ -323,7 +328,12 @@ test('colaboradora completa la visita con cobro y reposicion', async ({ page }) 
   await page.getByRole('button', { name: /continuar a reposicion/i }).click()
 
   await page.getByRole('button', { name: /continuar a fotos/i }).click()
-  await page.getByRole('button', { name: /saltar fotos/i }).click()
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'foto-visita.png',
+    mimeType: 'image/png',
+    buffer: SAMPLE_PNG,
+  })
+  await page.getByRole('button', { name: /continuar a confirmar/i }).click()
   await page.getByRole('button', { name: /cerrar visita/i }).click()
 
   await page.waitForURL('/campo/ruta-del-dia')
@@ -361,6 +371,23 @@ test('colaboradora completa la visita con cobro y reposicion', async ({ page }) 
   )
 })
 
+test('la visita no puede continuar a confirmacion sin al menos una foto final', async ({ page }) => {
+  const visitaId = await createVisita('en_ejecucion')
+  await seedDetalleConteo(visitaId, [
+    { producto_id: producto1Id, inv_anterior: 10, inv_actual: 8, precio_unitario: 15000 },
+    { producto_id: producto2Id, inv_anterior: 20, inv_actual: 20, precio_unitario: 5000 },
+  ])
+
+  await loginColaboradora(page)
+  await page.goto(`/campo/visita/${visitaId}`)
+  await page.locator('select').selectOption({ label: 'Efectivo' })
+  await page.getByRole('button', { name: /continuar a reposicion/i }).click()
+  await page.getByRole('button', { name: /continuar a fotos/i }).click()
+
+  await expect(page.getByText(/se requiere al menos una foto final/i)).toBeVisible()
+  await expect(page.getByRole('button', { name: /continuar a confirmar/i })).toBeDisabled()
+})
+
 test('cobro con discrepancia exige nota y admin ve el badge', async ({ page }) => {
   await seedInventarioColaboradora([
     { producto_id: producto1Id, cantidad_actual: 0 },
@@ -383,7 +410,12 @@ test('cobro con discrepancia exige nota y admin ve el badge', async ({ page }) =
   await page.locator('textarea').fill('El comercio quedo debiendo una parte')
   await page.getByRole('button', { name: /continuar a reposicion/i }).click()
   await page.getByRole('button', { name: /continuar a fotos/i }).click()
-  await page.getByRole('button', { name: /saltar fotos/i }).click()
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'foto-discrepancia.png',
+    mimeType: 'image/png',
+    buffer: SAMPLE_PNG,
+  })
+  await page.getByRole('button', { name: /continuar a confirmar/i }).click()
   await page.getByRole('button', { name: /cerrar visita/i }).click()
   await page.waitForURL('/campo/ruta-del-dia')
 

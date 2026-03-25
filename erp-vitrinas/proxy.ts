@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getHomeForRole } from '@/lib/auth/getHomeForRole'
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
@@ -42,8 +43,7 @@ export async function proxy(request: NextRequest) {
   const adminRoles = ['admin', 'supervisor', 'analista', 'compras']
 
   if (path === '/login' && user) {
-    const dest = rol === 'colaboradora' ? '/campo/ruta-del-dia' : '/admin/dashboard'
-    return NextResponse.redirect(new URL(dest, request.url))
+    return NextResponse.redirect(new URL(getHomeForRole(rol), request.url))
   }
 
   if (!user && (path.startsWith('/admin') || path.startsWith('/campo'))) {
@@ -55,7 +55,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/campo/ruta-del-dia', request.url))
     }
     if (path.startsWith('/campo') && rol !== 'colaboradora') {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+      return NextResponse.redirect(new URL(getHomeForRole(rol), request.url))
     }
   }
 

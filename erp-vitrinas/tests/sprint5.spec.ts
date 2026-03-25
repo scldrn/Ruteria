@@ -25,7 +25,7 @@ async function loginAdmin(page: Page) {
   await page.goto('/login')
   await page.getByLabel(/correo/i).fill('admin@erp.local')
   await page.getByLabel(/contraseña/i).fill('Admin1234!')
-  await page.click('button[type="submit"]')
+  await page.getByRole('button', { name: /iniciar sesión/i }).click()
   await page.waitForURL('/admin/dashboard')
 }
 
@@ -39,7 +39,7 @@ async function loginColaboradora(page: Page) {
   await page.goto('/login')
   await page.getByLabel(/correo/i).fill('colaboradora@erp.local')
   await page.getByLabel(/contraseña/i).fill('Colab1234!')
-  await page.click('button[type="submit"]')
+  await page.getByRole('button', { name: /iniciar sesión/i }).click()
   await page.waitForURL('/campo/ruta-del-dia')
 }
 
@@ -292,7 +292,7 @@ test('admin registra una baja y la ve en historial y valorizado', async ({ page 
 
   await page.getByRole('tab', { name: 'Movimientos' }).click()
   await expect(page.getByText('perdida')).toBeVisible()
-  await expect(page.getByText('Bodega central')).toBeVisible()
+  await expect(page.getByText('Bodega central').first()).toBeVisible()
 
   await page.getByRole('tab', { name: 'Valorizado' }).click()
   const valorizadoTable = page.locator('table').last()

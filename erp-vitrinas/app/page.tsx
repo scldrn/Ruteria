@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { getHomeForRole } from '@/lib/auth/getHomeForRole'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function RootPage() {
@@ -10,6 +11,5 @@ export default async function RootPage() {
   if (!user) redirect('/login')
 
   const rol = user.app_metadata?.rol as string | undefined
-  if (rol === 'colaboradora') redirect('/campo/ruta-del-dia')
-  redirect('/admin/dashboard')
+  redirect(getHomeForRole(rol))
 }
