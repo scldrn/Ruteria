@@ -2,7 +2,7 @@
 
 # ruteria
 
-**A field operations ERP/CRM for consignment retail networks**
+**A field service management platform for consignment retail networks**
 
 Built to manage the full visit workflow across **200+ retail locations**: routes, inventory counts, collections, replenishment, and admin oversight.
 
@@ -16,7 +16,7 @@ Built to manage the full visit workflow across **200+ retail locations**: routes
 
 ## Overview
 
-`ruteria` is a production-style internal platform for a consignment business operating physical display cases inside third-party stores.
+`ruteria` is a production-style FSM platform for a consignment business operating physical display cases inside third-party stores.
 
 It replaces manual coordination with a structured system for:
 
@@ -74,7 +74,8 @@ Release hardening included:
 
 ```bash
 git clone https://github.com/scldrn/ruteria.git
-cd ruteria/ruteria
+cd ruteria
+cd ruteria
 
 npm install
 npm run db:start
@@ -85,6 +86,10 @@ npm run dev
 ```
 
 Main app: `http://localhost:3000`
+
+Repository root: `ruteria/`
+
+App workspace: `ruteria/ruteria/`
 
 ## Quality Checks
 
@@ -102,7 +107,7 @@ Release gate details live in `RELEASE_CANDIDATE_CHECKLIST.md`.
 
 ## Repository
 
-- `ruteria/`: main application
+- `ruteria/`: main application workspace
 - `docs/`: sprint and implementation docs
 - `SPRINTS.md`: delivery history
 - `ERP_CRM_Plan_v2.md`: master product plan aligned to the shipped scope

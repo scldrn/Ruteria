@@ -1,4 +1,4 @@
-# ruteria
+# ruteria app
 
 Main application workspace for [ruteria](../README.md).
 
@@ -21,6 +21,8 @@ Main application workspace for [ruteria](../README.md).
 ## Run locally
 
 ```bash
+cd ruteria
+
 npm install
 npm run db:start
 ./scripts/export-supabase-env.sh dotenv > .env.local
