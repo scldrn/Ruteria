@@ -37,8 +37,8 @@ export default function GastosPage() {
       setMonto('')
       setNotas('')
       setIsAdding(false)
-    } catch (err: any) {
-      toast.error(err.message || 'Error al registrar el gasto')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al registrar el gasto')
     }
   }
 

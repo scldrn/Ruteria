@@ -136,7 +136,7 @@ export default function VitrinaDetallePage({ params }: { params: Promise<{ id: s
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Código" value={vitrina.codigo} />
               <Field label="Punto de venta" value={pdvNombre} />
-              <Field label="Zona" value={vitrina.puntos_de_venta?.zona_id ?? '—'} />
+              <Field label="Zona" value={vitrina.puntos_de_venta?.zonas?.nombre ?? '—'} />
               <Field
                 label="Estado"
                 value={

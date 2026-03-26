@@ -32,7 +32,7 @@ export function useMiInventario() {
 
       if (error) throw new Error(error.message)
 
-      return (data || []).map((row: any) => {
+      return (data || []).map((row) => {
         const prod = Array.isArray(row.productos) ? row.productos[0] : row.productos
         const cat = prod?.categorias
         const categoria_nombre = Array.isArray(cat) ? cat[0]?.nombre : cat?.nombre

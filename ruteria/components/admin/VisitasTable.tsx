@@ -125,11 +125,7 @@ const COLUMNAS: Column<VisitaAdmin>[] = [
 export function VisitasTable() {
   const hoy = getBusinessDate()
 
-  const [fechaDesde, setFechaDesde] = useState(() => {
-    const d = new Date()
-    d.setDate(d.getDate() - 1)
-    return getBusinessDate(d)
-  })
+  const [fechaDesde, setFechaDesde] = useState(hoy)
   const [fechaHasta, setFechaHasta] = useState(hoy)
   const [rutaId, setRutaId] = useState('')
   const [colaboradoraId, setColaboradoraId] = useState('')

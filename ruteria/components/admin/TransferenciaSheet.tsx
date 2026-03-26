@@ -106,12 +106,15 @@ export function TransferenciaSheet({ open, onOpenChange }: TransferenciaSheetPro
       await transferir.mutateAsync(parsed)
       toast.success('Transferencia registrada')
       onOpenChange(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       let message = 'Error al transferir inventario'
-      if (error?.name === 'ZodError' && error.errors?.[0]) {
-        message = error.errors[0].message
-      } else if (error instanceof Error) {
-        message = error.message
+      if (error instanceof Error) {
+        if (error.name === 'ZodError') {
+          const zodErr = error as Error & { errors?: { message: string }[] }
+          message = zodErr.errors?.[0]?.message ?? error.message
+        } else {
+          message = error.message
+        }
       }
       setSubmitError(message)
       toast.error(message)
