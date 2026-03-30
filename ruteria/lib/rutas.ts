@@ -58,6 +58,7 @@ const DIA_VISITA_NORMALIZED: Record<string, DiaVisita> = {
   domingo: 'domingo',
 }
 
+/** Normaliza variantes con/sin tilde y abreviadas a la forma canónica almacenada en BD. */
 export function normalizeDiaVisita(value: string): DiaVisita | null {
   return DIA_VISITA_NORMALIZED[value.trim().toLowerCase()] ?? null
 }
