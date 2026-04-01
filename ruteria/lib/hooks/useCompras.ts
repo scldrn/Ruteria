@@ -92,39 +92,25 @@ export function useCrearCompra() {
         0
       )
 
-      const { data: compra, error } = await supabase
-        .from('compras')
-        .insert({
-          proveedor_id: input.proveedor_id,
-          fecha: input.fecha,
-          estado: 'pendiente',
-          notas: input.notas ?? null,
-          total_estimado: totalEstimado,
-          created_by: user?.id ?? null,
-        })
-        .select()
-        .single()
-
-      if (error || !compra) {
-        throw new Error(error?.message ?? 'No se pudo crear la compra')
-      }
-
-      const lineas: Database['public']['Tables']['detalle_compra']['Insert'][] = input.lineas.map((linea) => ({
-        compra_id: compra.id,
+      const lineasJson = input.lineas.map((linea) => ({
         producto_id: linea.producto_id,
         cantidad_pedida: linea.cantidad_pedida,
         costo_unitario: linea.costo_unitario ?? null,
-        created_by: user?.id ?? null,
       }))
 
-      const { error: lineasError } = await supabase.from('detalle_compra').insert(lineas)
+      // RPC atómica: cabecera + líneas en una sola transacción (M-02)
+      // Usar `as never` porque crear_compra no está aún en database.types.ts
+      const { data, error } = await supabase.rpc('crear_compra' as never, {
+        p_proveedor_id: input.proveedor_id,
+        p_fecha: input.fecha,
+        p_notas: input.notas ?? null,
+        p_total_estimado: totalEstimado,
+        p_created_by: user?.id ?? null,
+        p_lineas: lineasJson,
+      } as never)
 
-      if (lineasError) {
-        await supabase.from('compras').delete().eq('id', compra.id)
-        throw new Error(lineasError.message)
-      }
-
-      return compra.id
+      if (error) throw new Error(error.message)
+      return data as string
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
