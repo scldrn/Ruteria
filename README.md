@@ -109,7 +109,7 @@ npm run build
 npm run test:e2e
 ```
 
-All gates must pass before merging to `main`. See `RELEASE_CANDIDATE_CHECKLIST.md` for the full release gate.
+All gates must pass before merging. `develop` requires: type-check, lint, test, build, audit. `main` requires all of the above plus e2e. Both branches are protected — direct pushes are blocked for everyone including admins.
 
 ## Repository Structure
 
@@ -126,6 +126,24 @@ ruteria/                        # repo root — planning and delivery docs
 ├── RELEASE_CANDIDATE_CHECKLIST.md
 └── DEPLOYMENT_RUNBOOK.md       # staging/production promotion and rollback
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. Quick reference:
+
+**Branch model:**
+```
+main ──────────────────────────────── production  (protected)
+     ↑ release/sprint-N  ↑ hotfix/*
+develop ────────────────────────────── integration (protected)
+     ↑ feature/SN-foo  ↑ feature/SN-bar
+```
+
+**Feature workflow:** branch from `develop` → PR to `develop` → sprint release → `main`
+
+**Naming:** `feature/S{N}-{description}` · `release/sprint-{N}` · `hotfix/{description}`
+
+**PRs to `main`:** only `release/*` and `hotfix/*` are accepted — others are auto-closed.
 
 ## License
 

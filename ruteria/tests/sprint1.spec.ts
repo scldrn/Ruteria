@@ -25,7 +25,7 @@ test('login: credenciales inválidas muestran error', async ({ page }) => {
   await page.getByLabel(/contraseña/i).fill('wrongpassword')
   await page.getByRole('button', { name: /iniciar sesión/i }).click()
   // Debe mostrar algún mensaje de error (toast o inline)
-  await expect(page.getByText(/inválid|credencial|incorrecto|error/i)).toBeVisible({ timeout: 5000 })
+  await expect(page.getByText(/inválid|credencial|incorrecto|error/i).first()).toBeVisible({ timeout: 5000 })
 })
 
 test('login: admin entra y llega al dashboard', async ({ page }) => {
