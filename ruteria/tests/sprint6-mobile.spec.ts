@@ -119,7 +119,7 @@ test('visita en móvil mantiene layout usable y sin overflow horizontal', async 
   await page.goto(`/campo/visita/${visitaId}`)
 
   await expect(page.getByText('Tienda Demo Norte')).toBeVisible()
-  await expect(page.getByText(/en linea|sin conexion|pendiente por sincronizar/i)).toBeVisible()
+  await expect(page.getByText(/en línea|sin conexión|pendiente por sincronizar/i)).toBeVisible()
 
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
   const clientWidth = await page.evaluate(() => document.documentElement.clientWidth)
