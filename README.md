@@ -114,17 +114,20 @@ All gates must pass before merging. `develop` requires: type-check, lint, test, 
 ## Repository Structure
 
 ```
-ruteria/                        # repo root — planning and delivery docs
+ruteria/                        # repo root
 ├── ruteria/                    # Next.js application workspace
 │   ├── app/                    # routes — (admin)/* and (campo)/*
 │   ├── components/             # feature and UI components
 │   ├── lib/                    # hooks, helpers, validations, Supabase clients
 │   ├── supabase/               # migrations and Edge Functions
 │   └── tests/                  # Playwright e2e specs
-├── ERP_CRM_Plan_v2.md          # master product plan
-├── SPRINTS.md                  # delivery history
-├── RELEASE_CANDIDATE_CHECKLIST.md
-└── DEPLOYMENT_RUNBOOK.md       # staging/production promotion and rollback
+├── docs/
+│   ├── ERP_CRM_Plan_v2.md      # master product plan
+│   ├── SPRINTS.md              # delivery history
+│   └── release/
+│       ├── RELEASE_CANDIDATE_CHECKLIST.md
+│       └── DEPLOYMENT_RUNBOOK.md
+└── CONTRIBUTING.md
 ```
 
 ## Contributing
