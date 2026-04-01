@@ -78,6 +78,7 @@ jobs:
       - run: npm run build
 
   e2e:
+    if: github.event_name == 'push' || github.base_ref == 'main'
     runs-on: ubuntu-latest
     defaults:
       run:
