@@ -269,8 +269,12 @@ CREATE POLICY "incidencias_insert" ON incidencias
     get_my_rol() IN ('admin', 'supervisor')
     OR (
       get_my_rol() = 'colaboradora'
-      AND can_access_pdv(pdv_id)
-      AND (visita_id IS NULL OR can_access_visita(visita_id))
+      AND (
+        -- incidencia ligada a una visita: acceso a la visita implica acceso al PDV
+        (visita_id IS NOT NULL AND can_access_visita(visita_id))
+        -- incidencia directa sobre un PDV sin visita
+        OR (visita_id IS NULL AND can_access_pdv(pdv_id))
+      )
     )
   );
 
