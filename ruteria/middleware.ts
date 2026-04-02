@@ -5,7 +5,7 @@ import { getHomeForRole } from '@/lib/auth/getHomeForRole'
 import { resolveCurrentRole } from '@/lib/auth/resolveCurrentRole'
 import type { Database } from '@/lib/supabase/database.types'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: request.headers },
   })
@@ -44,6 +44,11 @@ export async function proxy(request: NextRequest) {
   const rol = await resolveCurrentRole(supabase, user, user?.app_metadata?.rol as string | undefined)
   const adminRoles = ['admin', 'supervisor', 'analista', 'compras']
 
+  // Guard para rutas API sin autenticación: retornar 401 en lugar de redirigir
+  if (!user && path.startsWith('/api')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   if (path === '/login' && user) {
     return NextResponse.redirect(new URL(getHomeForRole(rol), request.url))
   }
@@ -65,5 +70,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/login', '/admin/:path*', '/campo/:path*'],
+  matcher: ['/login', '/admin/:path*', '/campo/:path*', '/api/:path*'],
 }
