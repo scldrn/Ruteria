@@ -88,6 +88,36 @@ export async function openOfflineDb(): Promise<IDBDatabase> {
   })
 }
 
+export async function ensureOfflineSessionOwner(userId: string | null): Promise<void> {
+  const db = await openOfflineDb()
+  try {
+    const readTx = db.transaction(OFFLINE_STORES.appMeta, 'readonly')
+    const existing = await requestToPromise(readTx.objectStore(OFFLINE_STORES.appMeta).get('owner_uid'))
+    const currentOwner: string | null = (existing as { key: string; value: string | null } | undefined)?.value ?? null
+    if (currentOwner === userId) return
+
+    const userStores = [
+      OFFLINE_STORES.routeSnapshots,
+      OFFLINE_STORES.visitSnapshots,
+      OFFLINE_STORES.visitDrafts,
+      OFFLINE_STORES.syncQueue,
+      OFFLINE_STORES.pendingPhotos,
+      OFFLINE_STORES.pendingIncidencias,
+    ] as const
+    const writeTx = db.transaction([...userStores, OFFLINE_STORES.appMeta], 'readwrite')
+    for (const name of userStores) {
+      writeTx.objectStore(name).clear()
+    }
+    writeTx.objectStore(OFFLINE_STORES.appMeta).put({ key: 'owner_uid', value: userId })
+    await new Promise<void>((resolve, reject) => {
+      writeTx.oncomplete = () => resolve()
+      writeTx.onerror = () => reject(writeTx.error)
+    })
+  } finally {
+    db.close()
+  }
+}
+
 export async function runStoreRequest<T>(
   storeName: StoreName,
   mode: IDBTransactionMode,

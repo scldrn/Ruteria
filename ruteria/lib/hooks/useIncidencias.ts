@@ -8,6 +8,7 @@ import {
 import { isProbablyOfflineError } from '@/lib/offline/network'
 import { putPendingPhoto } from '@/lib/offline/photos'
 import { enqueueCreateIncidencia } from '@/lib/offline/queue'
+import { buildScopedPhotoPath } from '@/lib/storage/paths'
 import type { Database } from '@/lib/supabase/database.types'
 import type {
   ActualizarIncidenciaInput,
@@ -296,8 +297,13 @@ export function useCrearIncidencia() {
 
         for (const file of compressedPhotos) {
           const photoId = crypto.randomUUID()
-          const extension = file.name.split('.').pop() || 'jpg'
-          const storagePath = `incidencias/${incidencia.id}/${photoId}.${extension}`
+          const storagePath = buildScopedPhotoPath({
+            entityType: 'incidencias',
+            ownerId: user?.id ?? 'unknown',
+            entityId: incidencia.id,
+            photoId,
+            filename: file.name,
+          })
 
           const { data: uploaded, error: uploadError } = await supabase.storage
             .from(STORAGE_BUCKET)
@@ -346,8 +352,13 @@ export function useCrearIncidencia() {
 
         for (const file of compressedPhotos) {
           const photoId = crypto.randomUUID()
-          const extension = file.name.split('.').pop() || 'jpg'
-          const storagePath = `incidencias/${localIncidenciaId}/${photoId}.${extension}`
+          const storagePath = buildScopedPhotoPath({
+            entityType: 'incidencias',
+            ownerId: user?.id ?? 'unknown',
+            entityId: localIncidenciaId,
+            photoId,
+            filename: file.name,
+          })
 
           photoIds.push(photoId)
           await putPendingPhoto({

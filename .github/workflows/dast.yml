@@ -1,0 +1,89 @@
+name: DAST
+
+on:
+  schedule:
+    - cron: '43 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+
+concurrency:
+  group: dast-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zap-baseline:
+    name: ZAP Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: ruteria
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          check-latest: true
+          cache: npm
+          cache-dependency-path: ruteria/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local stack
+        run: supabase start
+
+      - name: Export Supabase env
+        run: ./scripts/export-supabase-env.sh github
+
+      - name: Add internal secrets for privileged handlers
+        run: echo "INTERNAL_CRON_SECRET=local-dast-secret" >> "$GITHUB_ENV"
+
+      - name: Reset database and seed auth fixtures
+        run: |
+          npm run db:reset
+          npm run seed:auth
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application
+        run: |
+          nohup npm run start >/tmp/ruteria-dast.log 2>&1 &
+          timeout 90 bash -c 'until curl -fsS http://127.0.0.1:3000/login >/dev/null; do sleep 2; done'
+
+      - name: Baseline scan public login surface
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: http://127.0.0.1:3000/login
+          cmd_options: -a -m 5 -T 5
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-baseline
+
+      - name: Upload DAST reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: zap-baseline-reports
+          path: |
+            report_html.html
+            report_md.md
+            report_json.json
+          if-no-files-found: ignore

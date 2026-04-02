@@ -21,6 +21,7 @@ import {
   enqueueVisitStart,
 } from '@/lib/offline/queue'
 import { getVisitSnapshot, saveVisitSnapshot } from '@/lib/offline/snapshots'
+import { buildScopedPhotoPath } from '@/lib/storage/paths'
 
 const STORAGE_BUCKET = 'fotos-visita'
 
@@ -349,8 +350,14 @@ export function useVisita(id: string) {
     mutationFn: async (file: File): Promise<FotoVisita> => {
       const compressedFile = await compressImageFile(file)
       const localPhotoId = crypto.randomUUID()
-      const extension = compressedFile.name.split('.').pop() || 'jpg'
-      const path = `visitas/${id}/${localPhotoId}.${extension}`
+      const { data: { user } } = await supabase.auth.getUser()
+      const path = buildScopedPhotoPath({
+        entityType: 'visitas',
+        ownerId: user!.id,
+        entityId: id,
+        photoId: localPhotoId,
+        filename: compressedFile.name,
+      })
 
       try {
         const { data: uploaded, error: uploadError } = await supabase.storage
