@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Receipt, Trash2 } from 'lucide-react'
+import { Plus, Receipt } from 'lucide-react'
 import { useGastos } from '@/lib/hooks/useGastos'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
