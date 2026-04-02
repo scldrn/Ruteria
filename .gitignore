@@ -1,0 +1,10 @@
+# Local workspace metadata
+.DS_Store
+Thumbs.db
+.claude/
+CLAUDE.md
+.worktrees/
+
+# Generated AI planning / report artifacts stay local unless explicitly needed
+docs/superpowers/
+docs/*_reporte.txt

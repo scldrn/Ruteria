@@ -1,6 +1,8 @@
 # Contributing to ruteria
 
-Thank you for contributing! This guide covers everything you need to get started.
+This repository follows a lightweight operating standard: keep the flow simple,
+validate locally, and avoid automation that adds more friction than value. See
+[`docs/ESTANDAR_REPO_LIGERO.md`](docs/ESTANDAR_REPO_LIGERO.md) for the policy.
 
 ---
 
@@ -9,14 +11,13 @@ Thank you for contributing! This guide covers everything you need to get started
 - Node.js 20+
 - Docker Desktop (running)
 - [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started/install-the-cli) — macOS: `brew install supabase/tap/supabase` · Linux/Windows: see link
-- [GitHub CLI](https://cli.github.com/) — macOS: `brew install gh` · Linux/Windows: see link
 
 ---
 
 ## Local Setup
 
 ```bash
-git clone https://github.com/scldrn/Ruteria.git
+git clone https://github.com/scldrn/ruteria.git
 cd ruteria/ruteria
 
 npm install
@@ -38,59 +39,35 @@ App runs at `http://localhost:3000`
 
 ---
 
-## Branch Model
+## Working Model
 
-```
-main ──────────────────────────────────────── production  (protected)
-       ↑ release/sprint-N    ↑ hotfix/*
-develop ────────────────────────────────────── integration (protected)
-       ↑ feature/SN-foo  ↑ feature/SN-bar
-```
-
-| Branch | Branched from | Merges into | Purpose |
-|--------|--------------|-------------|---------|
-| `feature/S{N}-{description}` | `develop` | `develop` | One task per branch |
-| `release/sprint-{N}` | `develop` | `main` + `develop` | Sprint delivery |
-| `hotfix/{description}` | `main` | `main` + `develop` | Production emergency |
-
-> **Only `release/*` and `hotfix/*` may open PRs against `main`.** PRs from any other branch type targeting `main` will be automatically closed with a comment explaining the correct flow.
+- Use `develop` as the default integration branch for ongoing work.
+- Keep `main` production-oriented.
+- Create a short-lived branch when it adds clarity; direct pushes are acceptable
+  when the context is coordinated and the change is small.
+- Use Pull Requests when they help review or traceability. They are encouraged,
+  not mandatory for every change.
+- Reserve `release/*` and `hotfix/*` for cases that really need extra ceremony.
 
 ---
 
-## Naming Conventions
+## Validation
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Feature | `feature/S{N}-{description}` | `feature/S3-cobros-discrepancia` |
-| Release | `release/sprint-{N}` | `release/sprint-3` |
-| Hotfix | `hotfix/{description}` | `hotfix/stock-negativo-trigger` |
+Default application changes:
 
-Rules:
-- All lowercase, hyphen-separated
-- Feature branches always include the sprint number prefix (`S{N}`)
-- No uppercase, no underscores
+- `npm run lint`
+- `npm test`
+- `npm run build`
 
----
+Sensitive changes should also include:
 
-## Opening a PR
-
-1. **Branch from `develop`** (not `main`):
-   ```bash
-   git checkout develop && git pull
-   git checkout -b feature/S4-my-task
-   ```
-
-2. **One task per branch** — keep PRs small and focused.
-
-3. **Make sure CI is green** before requesting review. Required checks for `develop` PRs: `type-check`, `lint`, `test`, `build`, `audit`.
-
-4. **Link the related issue** in the PR description: `Closes #N`
-
-5. **Target `develop`** as the base branch.
+- `npm run type-check`
+- `npm run test:e2e` when auth, permissions, exports, offline sync, or routing are involved
+- `npm run audit:prod` when updating runtime dependencies
 
 ---
 
-## Commit Message Format
+## Commit Messages
 
 ```
 feat: descripción en español
@@ -106,25 +83,13 @@ test: descripción en español
 
 ---
 
-## Code Review
+## Before Adding Automation
 
-- **1 approval required** from a maintainer before merging
-- Stale reviews are **automatically dismissed** when new commits are pushed — you must re-request review after addressing feedback
-- Be responsive — stale PRs (no activity for 7 days) may be closed
+Do not add bots, blocking checks, new workflows, or branch policies unless the
+benefit is clear and specific.
 
----
+Any new automation should explain:
 
-## Releases
-
-Contributors don't cut releases. Maintainers handle `release/sprint-N` branches at the end of each sprint. If you think something should be in an upcoming release, comment on the relevant issue.
-
----
-
-## Reporting Bugs / Requesting Features
-
-Open an issue on GitHub. Issues are labeled by difficulty:
-
-- `good first issue` — entry level, text or config changes, great for first contributions
-- No label — difficulty ranges from junior to senior based on complexity
-
-See existing issues for examples of the format we use.
+- which real problem it solves
+- what risk or time it saves
+- why the added friction is worth it

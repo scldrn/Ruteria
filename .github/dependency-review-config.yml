@@ -1,4 +1,0 @@
-fail-on-severity: high
-fail-on-scopes:
-  - runtime
-vulnerability-check: true

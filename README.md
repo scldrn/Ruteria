@@ -33,7 +33,7 @@ The platform provides:
 | Layer | Technology |
 |---|---|
 | Frontend | Next.js 16 (App Router), React 19, Tailwind CSS v4, shadcn/ui |
-| State | Zustand (global) + TanStack React Query v5 (server cache) |
+| State | TanStack React Query v5 (server cache) + local React state |
 | Backend | Supabase (PostgreSQL + PostgREST + Edge Functions on Deno) |
 | Auth | Supabase Auth with JWT + Row Level Security per role |
 | Storage | Supabase Storage (private bucket for visit photos) |
@@ -103,30 +103,30 @@ App runs at `http://localhost:3000`
 
 ```bash
 npm run lint
-npm run type-check
 npm test
 npm run build
-npm run test:e2e
 ```
 
-All gates must pass before merging. `develop` requires: type-check, lint, test, build, audit. `main` requires all of the above plus e2e. Both branches are protected — direct pushes are blocked for everyone including admins.
+For sensitive changes, also run `npm run type-check`, `npm run test:e2e`, and `npm run audit:prod`.
+
+This repository keeps automation intentionally lightweight. The only built-in
+GitHub workflow is a manual quality run in
+[`/.github/workflows/ci.yml`](.github/workflows/ci.yml). Repo policy lives in
+[`docs/ESTANDAR_REPO_LIGERO.md`](docs/ESTANDAR_REPO_LIGERO.md).
 
 ## Repository Structure
 
 ```
 ruteria/                        # repo root
+├── .github/workflows/ci.yml    # manual quality workflow
+├── docs/
+│   └── ESTANDAR_REPO_LIGERO.md # repo operating standard
 ├── ruteria/                    # Next.js application workspace
 │   ├── app/                    # routes — (admin)/* and (campo)/*
 │   ├── components/             # feature and UI components
 │   ├── lib/                    # hooks, helpers, validations, Supabase clients
 │   ├── supabase/               # migrations and Edge Functions
 │   └── tests/                  # Playwright e2e specs
-├── docs/
-│   ├── ERP_CRM_Plan_v2.md      # master product plan
-│   ├── SPRINTS.md              # delivery history
-│   └── release/
-│       ├── RELEASE_CANDIDATE_CHECKLIST.md
-│       └── DEPLOYMENT_RUNBOOK.md
 └── CONTRIBUTING.md
 ```
 
@@ -134,19 +134,14 @@ ruteria/                        # repo root
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. Quick reference:
 
-**Branch model:**
-```
-main ──────────────────────────────── production  (protected)
-     ↑ release/sprint-N  ↑ hotfix/*
-develop ────────────────────────────── integration (protected)
-     ↑ feature/SN-foo  ↑ feature/SN-bar
-```
+**Default flow:** use `develop` for ongoing work, keep changes small, and use
+PRs when they add review context.
 
-**Feature workflow:** branch from `develop` → PR to `develop` → sprint release → `main`
+**Recommended validation:** `lint` + `test` + `build` by default; add
+`type-check`, `test:e2e`, and `audit:prod` for higher-risk changes.
 
-**Naming:** `feature/S{N}-{description}` · `release/sprint-{N}` · `hotfix/{description}`
-
-**PRs to `main`:** only `release/*` and `hotfix/*` are accepted — others are auto-closed.
+**Automation rule:** keep repo automation minimal unless it solves a concrete,
+repeated problem.
 
 ## License
 

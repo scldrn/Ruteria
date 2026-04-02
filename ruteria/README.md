@@ -36,6 +36,6 @@ npm run lint           # ESLint
 npm run type-check     # TypeScript (no emit)
 npm test               # Vitest unit tests
 npm run test:e2e       # Playwright e2e tests
-npm run ci:checks      # lint + type-check + build
+npm run ci:checks      # type-check + lint + test + build + audit
 npm run seed:auth      # recreate auth users after db:reset
 ```
